@@ -28,5 +28,6 @@ def login_page(request):
 @login_required
 def index(request):
     ctrl.current_user_id = request.session.get('user_id')
-    context = {}
+    coverage = ctrl.get_coverage()
+    context = { "coverage": coverage }
     return render(request, "game/index.html", context)

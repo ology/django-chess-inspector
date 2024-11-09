@@ -24,7 +24,9 @@
     {% endfor %}
 {% endif %}
 
-    <p>Hello</p>
+{% if coverage %}
+    <pre>{{ coverage }}</pre>
+{% endif %}
 
     <form action="{% url 'logout' %}" method="post" class="form-horizontal">
         {% csrf_token %}
