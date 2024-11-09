@@ -1,2 +1,2 @@
-# python-chess-inspector
+# Django Chess Inspector
 Visualize chess piece threat and protection status
