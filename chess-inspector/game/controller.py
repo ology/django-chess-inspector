@@ -10,8 +10,8 @@ class Controller:
         pass
 
     def get_coverage(self):
-        self.board.push_san("e4")
-        self.board.push_san("d5")
+        # self.board.push_san("e4")
+        # self.board.push_san("d5")
         c = Coverage(self.board)
         cover = c.cover()
         return json.dumps(cover, indent=2, sort_keys=True)
