@@ -1,0 +1,67 @@
+{% load static %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>RPG AI</title>
+  <link rel="icon" type="image/png" href="{% static 'favicon.ico' %}">
+  <link href="{% static 'css/fontawesome.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/solid.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script src="{% static 'js/jquery.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.min.js' %}" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <p></p>
+
+{% block content %}
+
+    <p></p>
+    {% if messages %}
+        {% for message in messages %}
+            <h2 style="color: green;">{{ message }}</h2>
+        {% endfor %}
+    {% endif %}
+
+  {% if form.errors %}
+    <p>Invalid login</p>
+  {% endif %}
+
+  {% if next %}
+    {% if not user.is_authenticated %}
+      <p><b>Please login</b></p>
+    {% endif %}
+  {% endif %}
+
+  <form method="post" action="{% url 'game:login_page' %}">
+    {% csrf_token %}
+    <table cellpadding="5">
+      <tr>
+        <td>{{ form.username.label_tag }}</td>
+        <td>{{ form.username }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.password.label_tag }}</td>
+        <td>{{ form.password }}</td>
+      </tr>
+    </table>
+    <p></p>
+    <input class="btn btn-sm btn-primary" type="submit" value="login" id="submit">
+    <input type="hidden" name="next" value="{{ next }}">
+  </form>
+  <p></p>
+  <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+
+{% endblock %}
+
+<p></p>
+</div>
+
+</body>
+</html>

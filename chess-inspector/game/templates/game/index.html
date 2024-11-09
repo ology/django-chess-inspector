@@ -26,6 +26,11 @@
 
     <p>Hello</p>
 
+    <form action="{% url 'logout' %}" method="post" class="form-horizontal">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary float-end" id="logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </form>
+
     <p></p>
 </div>
 
