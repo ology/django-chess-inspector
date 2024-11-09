@@ -30,7 +30,11 @@
 
 <div id="myBoard" style="width: 400px"></div>
 <script>
-    var board = Chessboard('myBoard', 'start')
+    var config = {
+        draggable: true,
+        position: 'start',
+    }
+    var board = Chessboard('myBoard', config)
 </script>
 
 {% if coverage %}
