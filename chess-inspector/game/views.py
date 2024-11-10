@@ -30,7 +30,6 @@ def login_page(request):
 def index(request):
     ctrl.current_user_id = request.session.get('user_id')
     if request.method == "POST":
-        # ctrl.logger.error(f"P: {request.POST}")
         ctrl.fen = request.POST.get('fen')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
