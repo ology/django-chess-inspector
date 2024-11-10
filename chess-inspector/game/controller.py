@@ -19,4 +19,4 @@ class Controller:
             self.board = chess.Board()
         c = Coverage(self.board)
         cover = c.cover()
-        return json.dumps(cover, indent=2, sort_keys=True)
+        return json.dumps(cover, sort_keys=True)
