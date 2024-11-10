@@ -36,5 +36,4 @@ def index(request):
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
     context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover }
-    # ctrl.logger.error(f"IC: {is_cover}")
     return render(request, "game/index.html", context)
