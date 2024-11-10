@@ -30,9 +30,15 @@
 
 <div id="myBoard" style="width: 400px"></div>
 <script>
+    function onDrop (source, target, piece, newPos, oldPos, orientation) {
+        console.log(piece + ': ' + source + ' => ' + target)
+        console.log(Chessboard.objToFen(newPos))
+    }
     var config = {
         draggable: true,
         position: 'start',
+        dropOffBoard: 'trash',
+        onDrop: onDrop,
     }
     var board = Chessboard('myBoard', config)
 </script>
