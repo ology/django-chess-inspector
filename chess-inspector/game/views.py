@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render, reverse
 import json
-
+import logging
 from .controller import Controller
 
 ctrl = Controller()
@@ -29,13 +29,10 @@ def login_page(request):
 @login_required
 def index(request):
     ctrl.current_user_id = request.session.get('user_id')
+    if request.method == "POST":
+        ctrl.logger.error(f"P: {request.POST}")
+        ctrl.fen = request.POST.get('fen')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
     context = { "fen": ctrl.board.fen(), "coverage": coverage }
     return render(request, "game/index.html", context)
-
-@login_required
-def play(request):
-    ctrl.current_user_id = request.session.get('user_id')
-    if request.method == "POST":
-        ctrl.fen = request.POST.get('fen')

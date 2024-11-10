@@ -18,7 +18,14 @@
     $(document).ready(function() {
         function onDrop (source, target, piece, newPos, oldPos, orientation) {
             console.log(piece + ': ' + source + ' => ' + target);
-            console.log(Chessboard.objToFen(newPos));
+            // console.log(Chessboard.objToFen(newPos));
+            const payload = {
+                fen: Chessboard.objToFen(newPos),
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+            };
+            $.post("{% url 'game:index' %}", payload, (data, status) => {
+                $('body').html(data);
+            });
         }
         var config = {
             draggable: true,
