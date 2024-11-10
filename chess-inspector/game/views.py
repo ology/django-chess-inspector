@@ -29,9 +29,12 @@ def login_page(request):
 @login_required
 def index(request):
     ctrl.current_user_id = request.session.get('user_id')
+    is_cover = False
     if request.method == "POST":
         ctrl.fen = request.POST.get('fen')
+        is_cover = request.POST.get('is_cover')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
-    context = { "fen": ctrl.board.fen(), "coverage": coverage }
+    context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover }
+    ctrl.logger.error(f"IC: {is_cover}")
     return render(request, "game/index.html", context)

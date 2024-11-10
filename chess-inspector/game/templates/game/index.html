@@ -15,7 +15,6 @@
   <link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.css' %}" crossorigin="anonymous">
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
   <script>
-    $(document).ready(function() {
         function make_cover() {
             const cover = JSON.parse({{ coverage|safe }});
             for (const posn in cover) {
@@ -39,30 +38,37 @@
             }
         }
 
-        function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            console.log(piece + ': ' + source + ' => ' + target);
-            // console.log(Chessboard.objToFen(newPos));
-            const payload = {
-                fen: Chessboard.objToFen(newPos),
-                csrfmiddlewaretoken: "{{ csrf_token }}",
+        $(document).ready(function() {
+            function onDrop (source, target, piece, newPos, oldPos, orientation) {
+                console.log(piece + ': ' + source + ' => ' + target);
+                // console.log(Chessboard.objToFen(newPos));
+                const payload = {
+                    is_cover: is_cover,
+                    fen: Chessboard.objToFen(newPos),
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                };
+                $.post("{% url 'game:index' %}", payload, (data, status) => {
+                    $('body').html(data);
+                });
+            }
+            var config = {
+                draggable: true,
+                position: "{{ fen|safe }}",
+                dropOffBoard: 'trash',
+                onDrop: onDrop,
             };
-            $.post("{% url 'game:index' %}", payload, (data, status) => {
-                $('body').html(data);
-            });
-        }
-        var config = {
-            draggable: true,
-            position: "{{ fen|safe }}",
-            dropOffBoard: 'trash',
-            onDrop: onDrop,
-        };
-        var board = Chessboard('myBoard', config);
+            var board = Chessboard('myBoard', config);
+            let is_cover = "{{ is_cover }}";
+            if (is_cover.toLowerCase() == 'true') {
+                make_cover();
+            }
 
-        $('.cover').click(function() {
-            make_cover();
+            $('.cover').click(function() {
+                is_cover = true;
+                make_cover();
+            });
         });
-    });
-  </script>
+</script>
 </head>
 <body>
 
