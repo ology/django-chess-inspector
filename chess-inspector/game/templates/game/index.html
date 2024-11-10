@@ -75,6 +75,11 @@
     <p></p>
     <button type="button" class="btn btn-secondary cover">Cover</button>
     <a href="{% url 'game:index' %}" class="btn btn-secondary cover">Standard</a>
+    <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
+        {% csrf_token %}
+        <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
+        <button type="submit" class="btn btn-secondary" title="Restart">Restart</button>
+    </form>
     <p></p>
     <form action="{% url 'logout' %}" method="post" class="form-horizontal">
         {% csrf_token %}
