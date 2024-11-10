@@ -25,6 +25,24 @@ class Controller:
             cover = self.hunt_en_passant(cover)
         return json.dumps(cover, sort_keys=True)
 
+    def neighborhood(self, file, neighbors, c):
+        if re.search(r"[a-h]", neighbors[0]):
+            n = f"{neighbors[0]}4"
+            neighbor = c.get_piece(self.board, n)
+            if neighbor and (not neighbor.color):
+                m = f"{file}3"
+                to = c.get_piece(self.board, m)
+                if not to:
+                    self.logger.error(f"P at {file}4 has neighbor: {neighbor} at {n}")
+        if re.search(r"[a-h]", neighbors[1]):
+            n = f"{neighbors[1]}4"
+            neighbor = c.get_piece(self.board, n)
+            if neighbor and (not neighbor.color):
+                m = f"{file}3"
+                to = c.get_piece(self.board, m)
+                if not to:
+                    self.logger.error(f"P at {file}4 has neighbor: {neighbor} at {n}")
+
     def hunt_en_passant(self, cover):
         c = Coverage(self.board)
         whites = [ f"{f}4" for f in list('abcdefgh') ]
@@ -34,16 +52,7 @@ class Controller:
             if piece and (piece.symbol() == 'P'):
                 file = p[0]
                 neighbors = [chr(ord(file) - 1), chr(ord(file) + 1)]
-                if re.search(r"[a-h]", neighbors[0]):
-                    n = f"{neighbors[0]}4"
-                    neighbor = c.get_piece(self.board, n)
-                    if neighbor:
-                        self.logger.error(f"P at {p} has neighbor: {neighbor} at {n}")
-                if re.search(r"[a-h]", neighbors[1]):
-                    n = f"{neighbors[1]}4"
-                    neighbor = c.get_piece(self.board, n)
-                    if neighbor:
-                        self.logger.error(f"P at {p} has neighbor: {neighbor} at {n}")
+                self.neighborhood(file, neighbors, c)
         # for p in blacks:
         #     self.logger.error(p)
         return cover
