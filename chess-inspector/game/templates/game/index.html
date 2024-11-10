@@ -29,9 +29,23 @@
         var board = Chessboard('myBoard', config);
 
         $('.cover').click(function() {
-            var coverage = JSON.parse({{ coverage|safe }});
-            for (const p in coverage) {
-                $('*[data-square="' + p + '"]').css('background-color', 'red');
+            const cover = JSON.parse({{ coverage|safe }});
+            for (const posn in cover) {
+                const cell = cover[posn]
+                // alert(JSON.stringify(cell))
+                let bkgd = 'gray';
+                if (('is_protected_by' in cell) && (cell.is_protected_by.length > 0) && ('is_threatened_by' in cell) && (cell.is_threatened_by.length > 0)) {
+                    // alert(JSON.stringify('HELLO 1'))
+                    bkgd = 'repeating-linear-gradient(45deg, lightgreen, lightgreen 10px, yellow 10px, yellow 20px)';
+                } else if (('is_threatened_by' in cell) && (cell.is_threatened_by.length > 0)) {
+                    // alert(JSON.stringify('HELLO 2'))
+                    bkgd = 'yellow';
+                } else if (('is_protected_by' in cell) && (cell.is_protected_by.length > 0)) {
+                    // alert(JSON.stringify('HELLO 3'))
+                    bkgd = 'lightgreen';
+                }
+                elem = $('*[data-square="' + posn + '"]');
+                elem.css('background', bkgd);
             }
         });
     });
@@ -52,7 +66,8 @@
     <p></p>
     <button type="button" class="btn btn-primary cover">Cover</button>
     <p></p>
-
+    {{ coverage|safe }}
+    <p></p>
     <form action="{% url 'logout' %}" method="post" class="form-horizontal">
         {% csrf_token %}
         <button type="submit" class="btn btn-secondary" id="logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
