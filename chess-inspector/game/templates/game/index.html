@@ -16,26 +16,7 @@
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
   <script>
     $(document).ready(function() {
-        function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            console.log(piece + ': ' + source + ' => ' + target);
-            // console.log(Chessboard.objToFen(newPos));
-            const payload = {
-                fen: Chessboard.objToFen(newPos),
-                csrfmiddlewaretoken: "{{ csrf_token }}",
-            };
-            $.post("{% url 'game:index' %}", payload, (data, status) => {
-                $('body').html(data);
-            });
-        }
-        var config = {
-            draggable: true,
-            position: "{{ fen|safe }}",
-            dropOffBoard: 'trash',
-            onDrop: onDrop,
-        };
-        var board = Chessboard('myBoard', config);
-
-        $('.cover').click(function() {
+        function make_cover() {
             const cover = JSON.parse({{ coverage|safe }});
             for (const posn in cover) {
                 const cell = cover[posn]
@@ -56,6 +37,29 @@
                 elem = $('*[data-square="' + posn + '"]');
                 elem.css('background', bkgd);
             }
+        }
+
+        function onDrop (source, target, piece, newPos, oldPos, orientation) {
+            console.log(piece + ': ' + source + ' => ' + target);
+            // console.log(Chessboard.objToFen(newPos));
+            const payload = {
+                fen: Chessboard.objToFen(newPos),
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+            };
+            $.post("{% url 'game:index' %}", payload, (data, status) => {
+                $('body').html(data);
+            });
+        }
+        var config = {
+            draggable: true,
+            position: "{{ fen|safe }}",
+            dropOffBoard: 'trash',
+            onDrop: onDrop,
+        };
+        var board = Chessboard('myBoard', config);
+
+        $('.cover').click(function() {
+            make_cover();
         });
     });
   </script>
