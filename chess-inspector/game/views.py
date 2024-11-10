@@ -38,4 +38,4 @@ def index(request):
 def play(request):
     ctrl.current_user_id = request.session.get('user_id')
     if request.method == "POST":
-          ctrl.fen = request.POST.get('fen')
+        ctrl.fen = request.POST.get('fen')
