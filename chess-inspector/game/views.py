@@ -31,5 +31,11 @@ def index(request):
     ctrl.current_user_id = request.session.get('user_id')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
-    context = { "coverage": coverage }
+    context = { "fen": ctrl.board.fen(), "coverage": coverage }
     return render(request, "game/index.html", context)
+
+@login_required
+def play(request):
+    ctrl.current_user_id = request.session.get('user_id')
+    if request.method == "POST":
+          ctrl.fen = request.POST.get('fen')

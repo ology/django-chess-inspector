@@ -22,7 +22,7 @@
         }
         var config = {
             draggable: true,
-            position: 'start',
+            position: "{{ fen|safe }}",
             dropOffBoard: 'trash',
             onDrop: onDrop,
         };
