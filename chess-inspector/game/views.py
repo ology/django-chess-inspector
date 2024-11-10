@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render, reverse
+import json
 
 from .controller import Controller
 
@@ -29,5 +30,6 @@ def login_page(request):
 def index(request):
     ctrl.current_user_id = request.session.get('user_id')
     coverage = ctrl.get_coverage()
+    coverage = json.dumps(coverage)
     context = { "coverage": coverage }
     return render(request, "game/index.html", context)
