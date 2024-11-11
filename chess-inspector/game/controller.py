@@ -35,7 +35,7 @@ class Controller:
                 m = f"{file}{rank - 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
+                    # self.logger.error(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
                     if not "is_threatened_by" in cover[p]:
                         cover[p]["is_threatened_by"] = []
                     cover[p]["is_threatened_by"].append(n)
@@ -50,7 +50,7 @@ class Controller:
                 m = f"{file}{rank - 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"P at {p} has neighbor: {neighbor} at {n}")
+                    # self.logger.error(f"P at {p} has neighbor: {neighbor} at {n}")
                     if not "is_threatened_by" in cover[p]:
                         cover[p]["is_threatened_by"] = []
                     cover[p]["is_threatened_by"].append(n)
@@ -70,7 +70,7 @@ class Controller:
                 m = f"{file}{rank + 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
+                    # self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
                     if not "is_threatened_by" in cover[p]:
                         cover[p]["is_threatened_by"] = []
                     cover[p]["is_threatened_by"].append(n)
@@ -84,7 +84,7 @@ class Controller:
                 m = f"{file}{rank + 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
+                    # self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
                     if not "is_threatened_by" in cover[p]:
                         cover[p]["is_threatened_by"] = []
                     cover[p]["is_threatened_by"].append(n)
