@@ -44,7 +44,7 @@
                 // console.log(Chessboard.objToFen(newPos));
                 const payload = {
                     is_cover: is_cover,
-                    en_passant: true,
+                    en_passant: true, // TODO make this a page control
                     fen: Chessboard.objToFen(newPos),
                     csrfmiddlewaretoken: "{{ csrf_token }}",
                 };
