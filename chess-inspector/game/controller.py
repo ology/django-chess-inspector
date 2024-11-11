@@ -105,13 +105,16 @@ class Controller:
         return cover
 
     def pgn(self, uploaded):
+        fens = []
         game_text = ''
         for line in uploaded:
             game_text = game_text + line.decode()
         pgn = io.StringIO(game_text)
         game = chess.pgn.read_game(pgn)
         board = game.board()
+        fens.append(board.fen())
         for move in game.mainline_moves():
             board.push(move)
-        self.logger.error(f"PGN: {board.fen()}")
-        return board.fen()
+            fens.append(board.fen())
+        # self.logger.error(f"FENS: {fens}")
+        return fens

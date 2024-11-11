@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render, reverse
 import json
 
@@ -30,26 +31,23 @@ def login_page(request):
 def index(request):
     ctrl.current_user_id = request.session.get('user_id')
     is_cover = False
+    play_n = 0
     if request.method == "POST":
         ctrl.fen = request.POST.get('fen')
         ctrl.en_passant = request.POST.get('en_passant')
         is_cover = request.POST.get('is_cover')
-    else:
-        ctrl.fen = request.GET.get('fen')
-        ctrl.en_passant = request.GET.get('en_passant')
-        is_cover = request.GET.get('is_cover')
+        play_n = request.POST.get('play_n')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
-    context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover }
+    context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover, "play_n": play_n }
     return render(request, "game/index.html", context)
 
 @login_required
 def pgn(request):
     ctrl.current_user_id = request.session.get('user_id')
     if request.method == "POST" and request.FILES['pgn']:
-        is_cover = request.POST.get('is_cover')
-        en_passant = request.POST.get('en_passant')
         pgn = request.FILES['pgn']
-        fen = ctrl.pgn(pgn)
-        return redirect(reverse("game:index") + f"?fen={fen}&is_cover={is_cover}&en_passant={en_passant}")
-    return redirect('game:index')
+        fens = ctrl.pgn(pgn)
+        response = HttpResponseRedirect(reverse('game:index'))
+        response.set_cookie("fens", json.dumps(fens))
+        return response

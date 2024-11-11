@@ -39,10 +39,23 @@
         }
 
         $(document).ready(function() {
+            function gamePost(is_cover, newPos) {
+                const payload = {
+                    play_n: play_n,
+                    is_cover: is_cover,
+                    en_passant: true, // TODO make this a page control
+                    fen: newPos,
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                };
+                $.post("{% url 'game:index' %}", payload, (data, status) => {
+                    $('body').html(data);
+                });
+            }
             function onDrop (source, target, piece, newPos, oldPos, orientation) {
                 console.log(piece + ': ' + source + ' => ' + target);
                 // console.log(Chessboard.objToFen(newPos));
                 const payload = {
+                    play_n: play_n,
                     is_cover: is_cover,
                     en_passant: true, // TODO make this a page control
                     fen: Chessboard.objToFen(newPos),
@@ -60,10 +73,37 @@
             };
             var board = Chessboard('myBoard', config);
             let is_cover = "{{ is_cover }}";
+            let play_n = {{ play_n }};
             if (is_cover.toLowerCase() == 'true') {
                 make_cover();
             }
-
+            const getCookieValue = (name) => (
+                document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
+            );
+            const deleteCookie = (name) => {
+                document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            };
+            let data = []
+            const fens = getCookieValue('fens');
+            if (fens) {
+                let string = fens.replace(/\\054/g, ',');
+                string = string.replace(/\\/g, "");
+                string = string.replace(/^"/, "");
+                string = string.replace(/"$/, "");
+                data = JSON.parse(string);
+            }
+            $('#play_forward').click(function() {
+                n = play_n + 1
+                alert(n)
+                gamePost(is_cover, data[n]);
+            });
+            $('#play_backward').click(function() {
+                n = play_n - 1
+                gamePost(is_cover, data[n]);
+            });
+            $('#clear_pgn').click(function() {
+                deleteCookie('fens');
+            });
             $('.cover').click(function() {
                 is_cover = true;
                 make_cover();
@@ -90,13 +130,16 @@
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
         <button type="submit" class="btn btn-secondary" title="Restart">Restart</button>
+        <button type="button" class="btn btn-secondary" id="play_backward" title="Play backward">&lt;</button>
+        <button type="button" class="btn btn-secondary" id="play_forward" title="Play forward">&gt;</button>
+        <button type="button" class="btn btn-secondary" id="clear" title="Clear">Clear</button>
     </form>
     <p></p>
     <form action="{% url 'game:pgn' %}" method="post" style="display: inline-block;" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="is_cover" value="{{ is_cover }}">
         <input type="hidden" name="en_passant" value="true">
-        <input type="file" class="form-control" id="pgn" name="pgn" accept=".pgn">
+        <input type="file" class="form-control" id="pgn" name="pgn" accept=".pgn" required>
         <button type="submit" class="btn btn-secondary" title="Upload a PGN game">Upload</button>
     </form>
     <p></p>
