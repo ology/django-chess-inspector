@@ -41,7 +41,7 @@
         $(document).ready(function() {
             function gamePost(is_cover, newPos) {
                 const payload = {
-                    play_n: play_n,
+                    play_n: play_n + 1,
                     is_cover: is_cover,
                     en_passant: true, // TODO make this a page control
                     fen: newPos,
@@ -55,7 +55,7 @@
                 console.log(piece + ': ' + source + ' => ' + target);
                 // console.log(Chessboard.objToFen(newPos));
                 const payload = {
-                    play_n: play_n,
+                    play_n: play_n + 1,
                     is_cover: is_cover,
                     en_passant: true, // TODO make this a page control
                     fen: Chessboard.objToFen(newPos),
@@ -94,7 +94,6 @@
             }
             $('#play_forward').click(function() {
                 n = play_n + 1
-                alert(n)
                 gamePost(is_cover, data[n]);
             });
             $('#play_backward').click(function() {
