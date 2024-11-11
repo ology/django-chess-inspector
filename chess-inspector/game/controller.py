@@ -34,6 +34,7 @@ class Controller:
         if not key in cover[m]:
             cover[m][key] = []
         cover[m][key].append(p)
+        return cover
 
     def white_neighborhood(self, file, neighbors, c, cover):
         rank = 4
@@ -46,14 +47,7 @@ class Controller:
                 to = c.get_piece(self.board, m)
                 if not to:
                     # self.logger.error(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
-                    key = "is_threatened_by"
-                    if not key in cover[p]:
-                        cover[p][key] = []
-                    cover[p][key].append(n)
-                    key = "black_can_move_here"
-                    if not key in cover[m]:
-                        cover[m][key] = []
-                    cover[m][key].append(p)
+                    cover = self.add_en_passant(cover, p, n, m, 'black')
         if re.search(r"[a-h]", neighbors[1]):
             n = f"{neighbors[1]}{rank}"
             neighbor = c.get_piece(self.board, n)
@@ -62,14 +56,7 @@ class Controller:
                 to = c.get_piece(self.board, m)
                 if not to:
                     # self.logger.error(f"P at {p} has neighbor: {neighbor} at {n}")
-                    key = "is_threatened_by"
-                    if not key in cover[p]:
-                        cover[p][key] = []
-                    cover[p][key].append(n)
-                    key = "black_can_move_here"
-                    if not key in cover[m]:
-                        cover[m][key] = []
-                    cover[m][key].append(p)
+                    cover = self.add_en_passant(cover, p, n, m, 'black')
         return cover
 
     def black_neighborhood(self, file, neighbors, c, cover):
@@ -83,14 +70,7 @@ class Controller:
                 to = c.get_piece(self.board, m)
                 if not to:
                     # self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
-                    key = "is_threatened_by"
-                    if not key in cover[p]:
-                        cover[p][key] = []
-                    cover[p][key].append(n)
-                    key = "white_can_move_here"
-                    if not key in cover[m]:
-                        cover[m][key] = []
-                    cover[m][key].append(p)
+                    cover = self.add_en_passant(cover, p, n, m, 'white')
         if re.search(r"[a-h]", neighbors[1]):
             n = f"{neighbors[1]}{rank}"
             neighbor = c.get_piece(self.board, n)
@@ -99,14 +79,7 @@ class Controller:
                 to = c.get_piece(self.board, m)
                 if not to:
                     # self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
-                    key = "is_threatened_by"
-                    if not key in cover[p]:
-                        cover[p][key] = []
-                    cover[p][key].append(n)
-                    key = "white_can_move_here"
-                    if not key in cover[m]:
-                        cover[m][key] = []
-                    cover[m][key].append(p)
+                    cover = self.add_en_passant(cover, p, n, m, 'white')
         return cover
 
     def neighborhood(self, symbol, list, cover, c):
