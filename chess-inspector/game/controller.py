@@ -26,57 +26,61 @@ class Controller:
         return json.dumps(cover, sort_keys=True)
 
     def white_neighborhood(self, file, neighbors, c, cover):
+        rank = 4
         if re.search(r"[a-h]", neighbors[0]):
-            n = f"{neighbors[0]}4"
+            n = f"{neighbors[0]}{rank}"
             neighbor = c.get_piece(self.board, n)
             if neighbor and (not neighbor.color):
-                m = f"{file}3"
+                m = f"{file}{rank - 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"P at {file}4 has neighbor: {neighbor} at {n}")
+                    self.logger.error(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
         if re.search(r"[a-h]", neighbors[1]):
-            n = f"{neighbors[1]}4"
+            n = f"{neighbors[1]}{rank}"
             neighbor = c.get_piece(self.board, n)
             if neighbor and (not neighbor.color):
-                m = f"{file}3"
+                m = f"{file}{rank - 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"P at {file}4 has neighbor: {neighbor} at {n}")
+                    self.logger.error(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
         return cover
 
     def black_neighborhood(self, file, neighbors, c, cover):
+        rank = 5
         if re.search(r"[a-h]", neighbors[0]):
-            n = f"{neighbors[0]}5"
+            n = f"{neighbors[0]}{rank}"
             neighbor = c.get_piece(self.board, n)
             if neighbor and (neighbor.color):
-                m = f"{file}6"
+                m = f"{file}{rank + 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"p at {file}5 has neighbor: {neighbor} at {n}")
+                    self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
         if re.search(r"[a-h]", neighbors[1]):
-            n = f"{neighbors[1]}5"
+            n = f"{neighbors[1]}{rank}"
             neighbor = c.get_piece(self.board, n)
             if neighbor and (neighbor.color):
-                m = f"{file}6"
+                m = f"{file}{rank + 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    self.logger.error(f"p at {file}5 has neighbor: {neighbor} at {n}")
+                    self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
+        return cover
+
+    def neighborhood(self, symbol, list, cover, c):
+        for p in list:
+            piece = c.get_piece(self.board, p)
+            if piece and (piece.symbol() == symbol):
+                file = p[0]
+                neighbors = [chr(ord(file) - 1), chr(ord(file) + 1)]
+                if symbol == 'P':
+                    cover = self.white_neighborhood(file, neighbors, c, cover)
+                else:
+                    cover = self.black_neighborhood(file, neighbors, c, cover)
         return cover
 
     def hunt_en_passant(self, cover):
         c = Coverage(self.board)
         whites = [ f"{f}4" for f in list('abcdefgh') ]
+        cover = self.neighborhood('P', whites, cover, c)
         blacks = [ f"{f}5" for f in list('abcdefgh') ]
-        for p in whites:
-            piece = c.get_piece(self.board, p)
-            if piece and (piece.symbol() == 'P'):
-                file = p[0]
-                neighbors = [chr(ord(file) - 1), chr(ord(file) + 1)]
-                cover = self.white_neighborhood(file, neighbors, c, cover)
-        for p in blacks:
-            piece = c.get_piece(self.board, p)
-            if piece and (piece.symbol() == 'p'):
-                file = p[0]
-                neighbors = [chr(ord(file) - 1), chr(ord(file) + 1)]
-                cover = self.black_neighborhood(file, neighbors, c, cover)
+        cover = self.neighborhood('p', blacks, cover, c)
         return cover
