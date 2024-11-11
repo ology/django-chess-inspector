@@ -92,8 +92,10 @@
         <button type="submit" class="btn btn-secondary" title="Restart">Restart</button>
     </form>
     <p></p>
-    <form action="{% url 'game:pgn' %}" method="post" style="display: inline-block;">
+    <form action="{% url 'game:pgn' %}" method="post" style="display: inline-block;" enctype="multipart/form-data">
         {% csrf_token %}
+        <input type="hidden" name="is_cover" value="{{ is_cover }}">
+        <input type="hidden" name="en_passant" value="true">
         <input type="file" class="form-control" id="pgn" name="pgn" accept=".pgn">
         <button type="submit" class="btn btn-secondary" title="Upload a PGN game">Upload</button>
     </form>

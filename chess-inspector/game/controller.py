@@ -1,6 +1,7 @@
 import chess
 import chess.pgn
 from chess_coverage import Coverage
+import io
 import json
 import logging
 import re
@@ -103,5 +104,14 @@ class Controller:
         cover = self.neighborhood('p', blacks, cover, c)
         return cover
 
-    def pgn(self, pgn):
-        self.logger.error(f"PGN: v{pgn}")
+    def pgn(self, uploaded):
+        game_text = ''
+        for line in uploaded:
+            game_text = game_text + line.decode()
+        pgn = io.StringIO(game_text)
+        game = chess.pgn.read_game(pgn)
+        board = game.board()
+        for move in game.mainline_moves():
+            board.push(move)
+        self.logger.error(f"PGN: {board.fen()}")
+        return board.fen()

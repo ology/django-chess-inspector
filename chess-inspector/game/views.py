@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, reverse
 import json
 
 from .controller import Controller
@@ -34,6 +34,10 @@ def index(request):
         ctrl.fen = request.POST.get('fen')
         ctrl.en_passant = request.POST.get('en_passant')
         is_cover = request.POST.get('is_cover')
+    else:
+        ctrl.fen = request.GET.get('fen')
+        ctrl.en_passant = request.GET.get('en_passant')
+        is_cover = request.GET.get('is_cover')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
     context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover }
@@ -42,7 +46,10 @@ def index(request):
 @login_required
 def pgn(request):
     ctrl.current_user_id = request.session.get('user_id')
-    if request.method == "POST":
-        pgn = request.POST.get('pgn')
-        ctrl.pgn(pgn)
+    if request.method == "POST" and request.FILES['pgn']:
+        is_cover = request.POST.get('is_cover')
+        en_passant = request.POST.get('en_passant')
+        pgn = request.FILES['pgn']
+        fen = ctrl.pgn(pgn)
+        return redirect(reverse("game:index") + f"?fen={fen}&is_cover={is_cover}&en_passant={en_passant}")
     return redirect('game:index')

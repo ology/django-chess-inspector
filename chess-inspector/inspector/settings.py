@@ -76,6 +76,9 @@ LOGIN_REDIRECT_URL = '/game/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/accounts/login/'
 
+MEDIA_URL = '/pgn/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'pgn')
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 # SESSION_SAVE_EVERY_REQUEST = True
 
