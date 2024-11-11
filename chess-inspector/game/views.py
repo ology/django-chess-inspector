@@ -32,6 +32,7 @@ def index(request):
     is_cover = False
     if request.method == "POST":
         ctrl.fen = request.POST.get('fen')
+        ctrl.en_passant = request.POST.get('en_passant')
         is_cover = request.POST.get('is_cover')
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
