@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.shortcuts import redirect, render, reverse
+from django.shortcuts import redirect, render
 import json
 
 from .controller import Controller
@@ -38,3 +38,11 @@ def index(request):
     coverage = json.dumps(coverage)
     context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover }
     return render(request, "game/index.html", context)
+
+@login_required
+def pgn(request):
+    ctrl.current_user_id = request.session.get('user_id')
+    if request.method == "POST":
+        pgn = request.POST.get('pgn')
+        ctrl.pgn(pgn)
+    return redirect('game:index')

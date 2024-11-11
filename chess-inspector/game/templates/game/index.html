@@ -92,6 +92,12 @@
         <button type="submit" class="btn btn-secondary" title="Restart">Restart</button>
     </form>
     <p></p>
+    <form action="{% url 'game:pgn' %}" method="post" style="display: inline-block;">
+        {% csrf_token %}
+        <input type="file" class="form-control" id="pgn" name="pgn" accept=".pgn">
+        <button type="submit" class="btn btn-secondary" title="Upload a PGN game">Upload</button>
+    </form>
+    <p></p>
     <form action="{% url 'logout' %}" method="post" class="form-horizontal">
         {% csrf_token %}
         <button type="submit" class="btn btn-secondary" id="logout" title="Logout">Logout</button>

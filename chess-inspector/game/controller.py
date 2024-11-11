@@ -1,4 +1,5 @@
 import chess
+import chess.pgn
 from chess_coverage import Coverage
 import json
 import logging
@@ -101,3 +102,6 @@ class Controller:
         blacks = [ f"{f}5" for f in list('abcdefgh') ]
         cover = self.neighborhood('p', blacks, cover, c)
         return cover
+
+    def pgn(self, pgn):
+        self.logger.error(f"PGN: v{pgn}")
