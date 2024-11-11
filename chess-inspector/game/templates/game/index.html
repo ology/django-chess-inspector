@@ -101,6 +101,7 @@
                 gamePost(is_cover, data[n]);
             });
             $('#clear_pgn').click(function() {
+                getCookieValue('fens');
                 deleteCookie('fens');
             });
             $('.cover').click(function() {
@@ -131,7 +132,7 @@
         <button type="submit" class="btn btn-secondary" title="Restart">Restart</button>
         <button type="button" class="btn btn-secondary" id="play_backward" title="Play backward">&lt;</button>
         <button type="button" class="btn btn-secondary" id="play_forward" title="Play forward">&gt;</button>
-        <button type="button" class="btn btn-secondary" id="clear" title="Clear">Clear</button>
+        <button type="button" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
     <form action="{% url 'game:pgn' %}" method="post" style="display: inline-block;" enctype="multipart/form-data">
