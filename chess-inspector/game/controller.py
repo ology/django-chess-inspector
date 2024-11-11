@@ -41,7 +41,6 @@ class Controller:
                     cover[p]["is_threatened_by"].append(n)
                     if not "black_can_move_here" in cover[m]:
                         cover[m]["black_can_move_here"] = []
-                    cover[p]["is_threatened_by"].append(n)
                     cover[m]["black_can_move_here"].append(p)
         if re.search(r"[a-h]", neighbors[1]):
             n = f"{neighbors[1]}{rank}"
@@ -56,7 +55,6 @@ class Controller:
                     cover[p]["is_threatened_by"].append(n)
                     if not "black_can_move_here" in cover[m]:
                         cover[m]["black_can_move_here"] = []
-                    cover[p]["is_threatened_by"].append(n)
                     cover[m]["black_can_move_here"].append(p)
         return cover
 
@@ -90,7 +88,6 @@ class Controller:
                     cover[p]["is_threatened_by"].append(n)
                     if not "white_can_move_here" in cover[m]:
                         cover[m]["white_can_move_here"] = []
-                    cover[p]["is_threatened_by"].append(n)
                     cover[m]["white_can_move_here"].append(p)
         return cover
 
