@@ -35,6 +35,8 @@
                 }
                 elem = $('*[data-square="' + posn + '"]');
                 elem.css('background', bkgd);
+                const title = `Square: ${cell.position}\nOccupant: ${cell['occupant'] || ''}\nProtects: ${cell['protects'] || ''}\nThreatens: ${cell['threatens'] || ''}\nProtected by: ${cell['is_protected_by'] || ''}\nThreatened by: ${cell['is_threatened_by'] || ''}`
+                elem.attr('title', title);
             }
         }
 
