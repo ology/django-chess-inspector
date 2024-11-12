@@ -9,6 +9,7 @@ import re
 class Controller:
     current_user_id = 0
     fen = ''
+    pgn_file = ''
     board = None
     en_passant = True
     logger = logging.getLogger('debug')
@@ -104,10 +105,10 @@ class Controller:
         cover = self.neighborhood('p', blacks, cover, c)
         return cover
 
-    def pgn(self, uploaded):
+    def pgn(self):
         fens = []
         game_text = ''
-        for line in uploaded:
+        for line in self.pgn_file:
             game_text = game_text + line.decode()
         pgn = io.StringIO(game_text)
         game = chess.pgn.read_game(pgn)

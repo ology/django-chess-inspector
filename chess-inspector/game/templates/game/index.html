@@ -103,6 +103,7 @@
             $('#clear_pgn').click(function() {
                 getCookieValue('fens');
                 deleteCookie('fens');
+                $('.pgn_file').hide()
             });
             $('.cover').click(function() {
                 is_cover = true;
@@ -135,6 +136,10 @@
         <button type="button" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
+{% if pgn_file %}
+    <div class="pgn_file">{{ pgn_file }}</div>
+    <p></p>
+{% endif %}
     <form action="{% url 'game:pgn' %}" method="post" style="display: inline-block;" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="is_cover" value="{{ is_cover }}">
