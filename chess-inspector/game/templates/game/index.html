@@ -134,23 +134,23 @@
 
     <div id="myBoard" style="width: 400px"></div>
     <p></p>
-    <button type="button" class="btn btn-secondary cover">Coverage</button>
-    <a href="{% url 'game:index' %}" class="btn btn-secondary cover" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;">Standard</a>
+    <button type="button" class="btn btn-sm btn-secondary cover">Coverage</button>
+    <a href="{% url 'game:index' %}" class="btn btn-sm btn-secondary cover" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;">Standard</a>
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
-        <button type="submit" class="btn btn-secondary" title="Restart">⏮︎</button>
-        <button type="button" class="btn btn-secondary" id="play_backward" title="Play backward">⏴︎</button>
-        <button type="button" class="btn btn-secondary" id="play_forward" title="Play forward">⏵︎</button>
+        <button type="submit" class="btn btn-sm btn-secondary" title="Restart">⏮︎</button>
+        <button type="button" class="btn btn-sm btn-secondary" id="play_backward" title="Play backward">⏴︎</button>
+        <button type="button" class="btn btn-sm btn-secondary" id="play_forward" title="Play forward">⏵︎</button>
     </form>
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
-        <button type="submit" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
+        <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
 {% if pgn_file %}
-    <div class="pgn_file">{{ pgn_file }}</div>
+    <div class="text-muted small pgn_file">Selected game: {{ pgn_file }}</div>
     <p></p>
 {% endif %}
     <form action="{% url 'game:pgn' %}" method="post" enctype="multipart/form-data">
@@ -158,12 +158,12 @@
         <input type="hidden" name="is_cover" value="{{ is_cover }}">
         <input type="hidden" name="en_passant" value="true">
         <input type="file" class="form-control" id="pgn" name="pgn" accept=".pgn" required>
-        <button type="submit" class="btn btn-secondary" title="Upload a PGN game">Upload</button>
+        <button type="submit" class="btn btn-sm btn-secondary" title="Upload a PGN game">Upload</button>
     </form>
     <p></p>
     <form action="{% url 'logout' %}" method="post" class="form-horizontal">
         {% csrf_token %}
-        <button type="submit" class="btn btn-secondary" id="logout" title="Logout">Logout</button>
+        <button type="submit" class="btn btn-sm btn-secondary" id="logout" title="Logout">Logout</button>
     </form>
     <p></p>
     <div id="footer" class="text-muted small">
