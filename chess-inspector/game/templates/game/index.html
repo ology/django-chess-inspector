@@ -67,6 +67,7 @@
             }
             var config = {
                 draggable: true,
+                moveSpeed: 'slow',
                 position: "{{ fen|safe }}",
                 dropOffBoard: 'trash',
                 onDrop: onDrop,
@@ -100,13 +101,14 @@
             }
             $('#play_forward').click(function() {
                 if (typeof pgn_file !== 'undefined') {
-                    play_n = play_n + 1
+                    play_n = play_n + 1;
                     gamePost(is_cover, data[play_n]);
+                    // board.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
                 }
             });
             $('#play_backward').click(function() {
                 if (typeof pgn_file !== 'undefined' && play_n > 0) {
-                    play_n = play_n - 1
+                    play_n = play_n - 1;
                     gamePost(is_cover, data[play_n]);
                 }
             });
