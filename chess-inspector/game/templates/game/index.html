@@ -105,7 +105,7 @@
                 }
             });
             $('#play_backward').click(function() {
-                if (typeof pgn_file !== 'undefined') {
+                if (typeof pgn_file !== 'undefined' && play_n > 0) {
                     play_n = play_n - 1
                     gamePost(is_cover, data[play_n]);
                 }
