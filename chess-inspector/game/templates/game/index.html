@@ -19,7 +19,7 @@
             const cover = JSON.parse({{ coverage|safe }});
             for (const posn in cover) {
                 const cell = cover[posn]
-                let bkgd = 'gray';
+                let bkgd = 'lightgray';
                 if (('is_protected_by' in cell) && (cell.is_protected_by.length > 0) && ('is_threatened_by' in cell) && (cell.is_threatened_by.length > 0)) {
                     bkgd = 'repeating-linear-gradient(45deg, lightgreen, lightgreen 10px, yellow 10px, yellow 20px)';
                 } else if (('is_threatened_by' in cell) && (cell.is_threatened_by.length > 0)) {
