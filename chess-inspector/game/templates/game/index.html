@@ -124,12 +124,12 @@
 
     <div id="myBoard" style="width: 400px"></div>
     <p></p>
-    <button type="button" class="btn btn-secondary cover">Cover</button>
+    <button type="button" class="btn btn-secondary cover">Coverage</button>
     <a href="{% url 'game:index' %}" class="btn btn-secondary cover">Standard</a>
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
-        <button type="submit" class="btn btn-secondary" title="Restart">Restart</button>
+        <button type="submit" class="btn btn-secondary" title="Restart">⏮︎</button>
         <button type="button" class="btn btn-secondary" id="play_backward" title="Play backward">⏴︎</button>
         <button type="button" class="btn btn-secondary" id="play_forward" title="Play forward">⏵︎</button>
         <button type="button" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
