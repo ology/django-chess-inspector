@@ -50,7 +50,7 @@ class Controller:
                 m = f"{file}{rank - 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    # self.logger.error(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
+                    # self.logger.debug(f"P at {file}{rank} has neighbor: {neighbor} at {n}")
                     cover = self.add_en_passant(cover, p, n, m, 'black')
         if re.search(r"[a-h]", neighbors[1]):
             n = f"{neighbors[1]}{rank}"
@@ -59,7 +59,7 @@ class Controller:
                 m = f"{file}{rank - 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    # self.logger.error(f"P at {p} has neighbor: {neighbor} at {n}")
+                    # self.logger.debug(f"P at {p} has neighbor: {neighbor} at {n}")
                     cover = self.add_en_passant(cover, p, n, m, 'black')
         return cover
 
@@ -73,7 +73,7 @@ class Controller:
                 m = f"{file}{rank + 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    # self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
+                    # self.logger.debug(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
                     cover = self.add_en_passant(cover, p, n, m, 'white')
         if re.search(r"[a-h]", neighbors[1]):
             n = f"{neighbors[1]}{rank}"
@@ -82,7 +82,7 @@ class Controller:
                 m = f"{file}{rank + 1}"
                 to = c.get_piece(self.board, m)
                 if not to:
-                    # self.logger.error(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
+                    # self.logger.debug(f"p at {file}{rank} has neighbor: {neighbor} at {n}")
                     cover = self.add_en_passant(cover, p, n, m, 'white')
         return cover
 
@@ -118,5 +118,5 @@ class Controller:
         for move in game.mainline_moves():
             board.push(move)
             fens.append(board.fen())
-        # self.logger.error(f"FENS: {fens}")
+        # self.logger.debug(f"FENS: {fens}")
         return fens
