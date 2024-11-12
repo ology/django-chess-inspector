@@ -39,6 +39,7 @@ def index(request):
         play_n = request.POST.get('play_n') or 0
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
+    ctrl.logger.debug(f"FILE: {ctrl.pgn_file}")
     context = { "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover, "play_n": play_n, "pgn_file": ctrl.pgn_file }
     return render(request, "game/index.html", context)
 
@@ -51,3 +52,8 @@ def pgn(request):
         response = HttpResponseRedirect(reverse('game:index'))
         response.set_cookie("fens", json.dumps(fens))
         return response
+
+@login_required
+def clear_pgn(request):
+    ctrl.pgn_file = ""
+    return redirect("game:index")

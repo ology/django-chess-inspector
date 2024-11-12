@@ -41,7 +41,7 @@
         $(document).ready(function() {
             function gamePost(is_cover, newPos) {
                 const payload = {
-                    play_n: play_n + 1,
+                    play_n: play_n,
                     is_cover: is_cover,
                     en_passant: true, // TODO make this a page control
                     fen: newPos,
@@ -55,7 +55,7 @@
                 console.log(piece + ': ' + source + ' => ' + target);
                 // console.log(Chessboard.objToFen(newPos));
                 const payload = {
-                    play_n: play_n + 1,
+                    play_n: play_n,
                     is_cover: is_cover,
                     en_passant: true, // TODO make this a page control
                     fen: Chessboard.objToFen(newPos),
@@ -73,7 +73,6 @@
             };
             var board = Chessboard('myBoard', config);
             let is_cover = "{{ is_cover }}";
-            let play_n = {{ play_n }};
             if (is_cover.toLowerCase() == 'true') {
                 make_cover();
             }
@@ -92,19 +91,30 @@
                 string = string.replace(/"$/, "");
                 data = JSON.parse(string);
             }
+            let play_n = {{ play_n }} || 0;
+            let pgn_file = "{{ pgn_file }}";
+            if ((typeof pgn_file == 'undefined') || (pgn_file == "")) {
+                $('#play_forward').prop('disabled', true);
+                $('#play_backward').prop('disabled', true);
+                $('#clear_pgn').prop('disabled', true);
+            }
             $('#play_forward').click(function() {
-                n = play_n + 1
-                gamePost(is_cover, data[n]);
+                if (typeof pgn_file !== 'undefined') {
+                    play_n = play_n + 1
+                    gamePost(is_cover, data[play_n]);
+                }
             });
             $('#play_backward').click(function() {
-                n = play_n - 1
-                gamePost(is_cover, data[n]);
+                if (typeof pgn_file !== 'undefined') {
+                    play_n = play_n - 1
+                    gamePost(is_cover, data[play_n]);
+                }
             });
-            $('#clear_pgn').click(function() {
-                getCookieValue('fens');
-                deleteCookie('fens');
-                $('.pgn_file').hide()
-            });
+            // $('#clear_pgn').click(function() {
+            //     getCookieValue('fens');
+            //     deleteCookie('fens');
+            //     pgn_file = undefined;
+            // });
             $('.cover').click(function() {
                 is_cover = true;
                 make_cover();
@@ -133,7 +143,10 @@
         <button type="submit" class="btn btn-secondary" title="Restart">⏮︎</button>
         <button type="button" class="btn btn-secondary" id="play_backward" title="Play backward">⏴︎</button>
         <button type="button" class="btn btn-secondary" id="play_forward" title="Play forward">⏵︎</button>
-        <button type="button" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
+    </form>
+    <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
 {% if pgn_file %}
