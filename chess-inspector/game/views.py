@@ -34,13 +34,23 @@ def index(request):
     play_n = 0
     if request.method == "POST":
         ctrl.last_fen = request.POST.get('last_fen')
+        last_fen = ctrl.last_fen
         ctrl.fen = request.POST.get('fen')
+        fen = ctrl.board.fen()
         ctrl.en_passant = request.POST.get('en_passant')
         is_cover = request.POST.get('is_cover')
         play_n = request.POST.get('play_n') or 0
+        fen = ctrl.fen
+    else:
+        last_fen = request.GET.get('last_fen')
+        fen = request.GET.get('fen')
+        is_cover = request.GET.get('is_cover')
+        play_n = request.GET.get('play_n') or 0
+        ctrl.logger.debug(f"N: {play_n}")
+        fen = ctrl.fen
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
-    context = { "last_fen": ctrl.last_fen, "fen": ctrl.board.fen(), "coverage": coverage, "is_cover": is_cover, "play_n": play_n, "pgn_file": ctrl.pgn_file }
+    context = { "last_fen": last_fen, "fen": fen, "coverage": coverage, "is_cover": is_cover, "play_n": play_n, "pgn_file": ctrl.pgn_file }
     return render(request, "game/index.html", context)
 
 @login_required
