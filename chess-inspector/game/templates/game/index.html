@@ -146,6 +146,7 @@
     </form>
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
+        <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
         <button type="submit" class="btn btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
