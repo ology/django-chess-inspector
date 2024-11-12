@@ -39,12 +39,13 @@
         }
 
         $(document).ready(function() {
-            function gamePost(is_cover, newPos) {
+            function gamePost(is_cover, lastPos, newPos) {
                 const payload = {
                     play_n: play_n,
                     is_cover: is_cover,
                     en_passant: true, // TODO make this a page control
                     fen: newPos,
+                    last_fen: lastPos,
                     csrfmiddlewaretoken: "{{ csrf_token }}",
                 };
                 $.post("{% url 'game:index' %}", payload, (data, status) => {
@@ -68,7 +69,7 @@
             var config = {
                 draggable: true,
                 moveSpeed: 'slow',
-                position: "{{ fen|safe }}",
+                position: "{{ last_fen|safe }}",
                 dropOffBoard: 'trash',
                 onDrop: onDrop,
             };
@@ -102,20 +103,21 @@
             $('#play_forward').click(function() {
                 if (typeof pgn_file !== 'undefined') {
                     play_n = play_n + 1;
-                    gamePost(is_cover, data[play_n]);
-                    // board.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+                    gamePost(is_cover, data[play_n - 1], data[play_n]);
                 }
             });
             $('#play_backward').click(function() {
                 if (typeof pgn_file !== 'undefined' && play_n > 0) {
                     play_n = play_n - 1;
-                    gamePost(is_cover, data[play_n]);
+                    gamePost(is_cover, data[play_n - 1], data[play_n]);
                 }
             });
             $('.cover').click(function() {
                 is_cover = true;
                 make_cover();
             });
+            board.position("{{ fen|safe }}");
+            // board.position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
         });
 </script>
 </head>

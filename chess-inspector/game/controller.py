@@ -9,6 +9,7 @@ import re
 class Controller:
     current_user_id = 0
     fen = ''
+    last_fen = ''
     pgn_file = ''
     board = None
     en_passant = True
