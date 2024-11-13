@@ -101,8 +101,15 @@
             if ((typeof pgn_file == 'undefined') || (pgn_file == "")) {
                 $('#play_forward').prop('disabled', true);
                 $('#play_backward').prop('disabled', true);
+                $('#play_end').prop('disabled', true);
                 $('#clear_pgn').prop('disabled', true);
             }
+            $('#play_end').click(function() {
+                if (typeof pgn_file !== 'undefined') {
+                    play_n = data.length - 1;
+                    gamePost(is_cover, data[play_n - 1], data[play_n]);
+                }
+            });
             $('#play_forward').click(function() {
                 if (typeof pgn_file !== 'undefined' && play_n < data.length - 1) {
                     play_n = play_n + 1;
@@ -145,6 +152,7 @@
         <button type="submit" class="btn btn-sm btn-primary" title="Restart">⏮︎</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward">⏴︎</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward">⏵︎</button>
+        <button type="button" class="btn btn-sm btn-primary" id="play_end" title="Go to the end">⏭︎</button>
     </form>
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
