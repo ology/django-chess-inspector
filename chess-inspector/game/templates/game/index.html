@@ -20,11 +20,11 @@
             for (const posn in cover) {
                 const cell = cover[posn]
                 let bkgd = 'lightgray';
-                if (('is_protected_by' in cell) && (cell.is_protected_by.length > 0) && ('is_threatened_by' in cell) && (cell.is_threatened_by.length > 0)) {
+                if (('is_protected_by' in cell) && (cell['is_protected_by'].length > 0) && ('is_threatened_by' in cell) && (cell['is_threatened_by'].length > 0)) {
                     bkgd = 'repeating-linear-gradient(45deg, lightgreen, lightgreen 10px, yellow 10px, yellow 20px)';
-                } else if (('is_threatened_by' in cell) && (cell.is_threatened_by.length > 0)) {
+                } else if (('is_threatened_by' in cell) && (cell['is_threatened_by'].length > 0)) {
                     bkgd = 'yellow';
-                } else if (('is_protected_by' in cell) && (cell.is_protected_by.length > 0)) {
+                } else if (('is_protected_by' in cell) && (cell['is_protected_by'].length > 0)) {
                     bkgd = 'lightgreen';
                 } else if (('black_can_move_here' in cell) && (cell['black_can_move_here'].length > 0) && ('white_can_move_here' in cell) && (cell['white_can_move_here'].length > 0)) {
                     bkgd = 'repeating-linear-gradient(45deg, lightblue, lightblue 10px, tan 10px, tan 20px)';
