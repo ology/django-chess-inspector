@@ -169,8 +169,8 @@
         <br>
         Black: {{ pgn_black }}
     </div>
-    <p></p>
 {% endif %}
+    <p></p>
     <form action="{% url 'game:pgn' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="is_cover" value="{{ is_cover }}">
