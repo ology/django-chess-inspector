@@ -45,7 +45,6 @@ def index(request):
         fen = request.GET.get('fen')
         is_cover = request.GET.get('is_cover')
         play_n = request.GET.get('play_n') or 0
-        ctrl.logger.debug(f"N: {play_n}")
         fen = ctrl.fen
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
