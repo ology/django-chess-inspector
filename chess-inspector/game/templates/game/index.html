@@ -160,6 +160,8 @@
         <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
+    <div class="text-muted small">{{ fen|safe }}</div>
+    <p></p>
 {% if pgn_file %}
     <div class="text-muted small pgn_file">Selected game: {{ pgn_file }}</div>
     <p></p>
