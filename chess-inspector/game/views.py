@@ -29,7 +29,6 @@ def login_page(request):
 
 @login_required
 def index(request):
-    ctrl.current_user_id = request.session.get('user_id')
     is_cover = False
     play_n = 0
     if request.method == "POST":
@@ -55,7 +54,6 @@ def index(request):
 
 @login_required
 def pgn(request):
-    ctrl.current_user_id = request.session.get('user_id')
     if request.method == "POST" and request.FILES['pgn']:
         ctrl.pgn_file = request.FILES['pgn']
         fens = ctrl.pgn()
