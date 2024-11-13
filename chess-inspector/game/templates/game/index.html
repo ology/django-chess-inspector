@@ -150,8 +150,8 @@
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
         <button type="submit" class="btn btn-sm btn-primary" title="Restart">⏮︎</button>
-        <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward">⏴︎</button>
-        <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward">⏵︎</button>
+        <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward">&lt;</button>
+        <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward">&gt;</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_end" title="Go to the end">⏭︎</button>
     </form>
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
