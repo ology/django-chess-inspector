@@ -160,8 +160,7 @@
         <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
     <p></p>
-    <div class="text-muted small">{{ fen|safe }}</div>
-    <p></p>
+    <input type="text" class="form-control" id="show_fen" value="{{ fen|safe }}" disabled>
 {% if pgn_file %}
     <div class="text-muted small pgn_file">
         Date: {{ pgn_date }}
