@@ -104,7 +104,7 @@
                 $('#clear_pgn').prop('disabled', true);
             }
             $('#play_forward').click(function() {
-                if (typeof pgn_file !== 'undefined') {
+                if (typeof pgn_file !== 'undefined' && play_n < data.length - 1) {
                     play_n = play_n + 1;
                     gamePost(is_cover, data[play_n - 1], data[play_n]);
                 }
