@@ -48,7 +48,17 @@ def index(request):
         fen = ctrl.fen
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
-    context = { "last_fen": last_fen, "fen": fen, "coverage": coverage, "is_cover": is_cover, "play_n": play_n, "pgn_file": ctrl.pgn_file }
+    context = {
+        "last_fen": last_fen,
+        "fen": fen,
+        "coverage": coverage,
+        "is_cover": is_cover,
+        "play_n": play_n,
+        "pgn_file": ctrl.pgn_file,
+        "pgn_date": ctrl.pgn_date,
+        "pgn_white": ctrl.pgn_white,
+        "pgn_black": ctrl.pgn_black,
+    }
     return render(request, "game/index.html", context)
 
 @login_required

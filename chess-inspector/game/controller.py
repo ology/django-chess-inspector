@@ -11,6 +11,9 @@ class Controller:
     fen = ''
     last_fen = ''
     pgn_file = ''
+    pgn_date = ''
+    pgn_white = ''
+    pgn_black = ''
     board = None
     en_passant = True
     logger = logging.getLogger('debug')
@@ -113,6 +116,9 @@ class Controller:
             game_text = game_text + line.decode()
         pgn = io.StringIO(game_text)
         game = chess.pgn.read_game(pgn)
+        self.pgn_date = game.headers['Date']
+        self.pgn_white = game.headers['White']
+        self.pgn_black = game.headers['Black']
         board = game.board()
         fens.append(board.fen())
         for move in game.mainline_moves():

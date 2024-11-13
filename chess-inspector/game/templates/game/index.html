@@ -163,7 +163,13 @@
     <div class="text-muted small">{{ fen|safe }}</div>
     <p></p>
 {% if pgn_file %}
-    <div class="text-muted small pgn_file">Selected game: {{ pgn_file }}</div>
+    <div class="text-muted small pgn_file">
+        Date: {{ pgn_date }}
+        <br>
+        White: {{ pgn_white }}
+        <br>
+        Black: {{ pgn_black }}
+    </div>
     <p></p>
 {% endif %}
     <form action="{% url 'game:pgn' %}" method="post" enctype="multipart/form-data">
