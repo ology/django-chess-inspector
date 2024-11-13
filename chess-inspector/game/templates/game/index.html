@@ -15,6 +15,11 @@
   <link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.css' %}" crossorigin="anonymous">
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
   <script>
+        function preventBehavior(e) {
+            e.preventDefault();
+        };
+        document.addEventListener("touchmove", preventBehavior, {passive: false});
+
         function make_cover() {
             const cover = JSON.parse({{ coverage|safe }});
             for (const posn in cover) {
