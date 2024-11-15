@@ -9,3 +9,7 @@
 #show_fen {
     font-size: small;
 }
+
+.hover {
+    border: 5px solid red;
+}
