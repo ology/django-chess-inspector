@@ -148,8 +148,7 @@
                     if (imgs.length) {
                         list = cover[i]['moves'];
                         for (posn in list) {
-                            p = list[posn];
-                            elem = $('*[data-square="' + p + '"]');
+                            elem = $('*[data-square="' + list[posn] + '"]');
                             elem.addClass("hover");
                         }
                     }
