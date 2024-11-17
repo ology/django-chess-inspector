@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ['127.0.0.1', '192.168.100.50', '68.67.110.36']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'game.apps.GameConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -70,6 +72,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'inspector.wsgi.application'
+ASGI_APPLICATION = 'inspector.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/game/'
