@@ -115,6 +115,9 @@
                 // board.position(fen);
             }
             function gamePost(is_cover, lastPos, newPos) {
+                chatSocket.send(JSON.stringify({
+                    message: Chessboard.objToFen(newPos)
+                }));
                 const payload = {
                     play_n: play_n,
                     is_cover: is_cover,
@@ -123,6 +126,9 @@
                     last_fen: lastPos,
                     csrfmiddlewaretoken: "{{ csrf_token }}",
                 };
+                $.post("{% url 'game:index' %}", payload, (data, status) => {
+                    $('body').html(data);
+                });
             }
             function onDrop (source, target, piece, newPos, oldPos, orientation) {
                 console.log(piece + ': ' + source + ' => ' + target);
