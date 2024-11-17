@@ -112,7 +112,8 @@
                     $('#play_end').prop('disabled', true);
                     $('#clear_pgn').prop('disabled', true);
                 }
-                // board.position(fen);
+                p = fen || last_fen;
+                board.position(p);
             }
             function gamePost(is_cover, lastPos, newPos) {
                 chatSocket.send(JSON.stringify({
