@@ -50,9 +50,9 @@
             const chatSocket = new WebSocket(url);
             chatSocket.onmessage = function(e) {
                 let data = JSON.parse(e.data);
-                console.log('D:', data);
+                // console.log('D:', data);
                 if (data.type === 'chat') {
-                board.position(data.message);
+                    board.position(data.message);
                 }
             }
             window.mobileCheck = function() {
@@ -86,7 +86,7 @@
                     draggable: true,
                     moveSpeed: 'slow',
                     position: fen,
-                    dropOffBoard: 'trash',
+                    // dropOffBoard: 'snapback',
                     onDrop: onDrop,
                 };
                 board = Chessboard('myBoard', config);
@@ -133,20 +133,25 @@
             }
             function onDrop (source, target, piece, newPos, oldPos, orientation) {
                 console.log(piece + ': ' + source + ' => ' + target);
-                chatSocket.send(JSON.stringify({
-                    message: Chessboard.objToFen(newPos)
-                }));
-                const payload = {
-                    play_n: play_n,
-                    is_cover: is_cover,
-                    en_passant: true, // TODO make this a page control
-                    fen: Chessboard.objToFen(newPos),
-                    last_fen: Chessboard.objToFen(oldPos),
-                    csrfmiddlewaretoken: "{{ csrf_token }}",
-                };
-                $.post("{% url 'game:index' %}", payload, (data, status) => {
-                    $('body').html(data);
-                });
+                if (target == 'offboard' && $('#legal').is(":checked")) {
+                    return 'snapback';
+                }
+                else {
+                    chatSocket.send(JSON.stringify({
+                        message: Chessboard.objToFen(newPos)
+                    }));
+                    const payload = {
+                        play_n: play_n,
+                        is_cover: is_cover,
+                        en_passant: true, // TODO make this a page control
+                        fen: Chessboard.objToFen(newPos),
+                        last_fen: Chessboard.objToFen(oldPos),
+                        csrfmiddlewaretoken: "{{ csrf_token }}",
+                    };
+                    $.post("{% url 'game:index' %}", payload, (data, status) => {
+                        $('body').html(data);
+                    });
+                }
             }
             init_game();
             $('#play_end').click(function() {
@@ -170,6 +175,17 @@
             $('.cover').click(function() {
                 is_cover = true;
                 make_cover(cover);
+            });
+            $("#myBoard > div > div > div > div").on('touchstart', function() {
+                imgs = $(this).children("img");
+                i = $(this).data('square')
+                if (imgs.length) {
+                    list = cover[i]['moves'];
+                    for (posn in list) {
+                        elem = $('*[data-square="' + list[posn] + '"]');
+                        elem.addClass("hover");
+                    }
+                }
             });
             $("#myBoard > div > div > div > div").hover(
                 function() {
@@ -219,6 +235,8 @@
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
         <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear">Clear</button>
     </form>
+    &nbsp;
+    <input type="checkbox" name="legal" id="legal">
     <p></p>
     <input type="text" class="form-control" id="show_fen" value="{{ fen|safe }}" disabled>
 {% if pgn_file %}
