@@ -3,7 +3,9 @@ Visualize chess piece move, threat, and protection status.
 
 ![user interface](chess_coverage.png)
 
-Install and run:
+![in action](coverage-in-action.png)
+
+## Install and run:
 
 ```
 git clone https://github.com/ology/django-chess-inspector.git
