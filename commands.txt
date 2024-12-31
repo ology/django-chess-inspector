@@ -1,3 +1,7 @@
+git clone https://github.com/ology/django-chess-inspector.git
+cd django-chess-inspector
+python3 -m venv .
+source ./bin/activate
 pip install chess chess_coverage
 pip install django
 pip install channels channels["daphne"]
