@@ -5,6 +5,8 @@ Visualize chess piece move, threat, and protection status.
 
 ![in action](coverage-in-action.png)
 
+---
+
 ## Install and run:
 
 ```
@@ -25,6 +27,3 @@ python3 manage.py runserver 192.168.100.50:8080
 pip install gunicorn
 GUNICORN_CMD_ARGS="--bind=192.168.100.50:8080 --workers=3 --timeout 120" gunicorn inspector.wsgi:application
 ```
-
-~
-
