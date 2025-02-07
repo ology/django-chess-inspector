@@ -44,6 +44,35 @@
             }
         }
 
+        function make_moves(cover, turn=0) {
+            for (const posn in cover) {
+                const cell = cover[posn]
+                let bkgd = 'lightgray';
+                if ((turn == 0) && ('black_can_move_here' in cell) && (cell['black_can_move_here'].length > 0)) {
+                    if (('white_can_move_here' in cell) && (cell['white_can_move_here'].length > 0)) {
+                        bkgd = 'yellow';
+                    } else if (cell['black_can_move_here'].length > 1) {
+                        bkgd = 'lightgreen';
+                    } else {
+                        bkgd = 'tan';
+                    }
+                }
+                else if ((turn == 1) && ('white_can_move_here' in cell) && (cell['white_can_move_here'].length > 0)) {
+                    if (('black_can_move_here' in cell) && (cell['black_can_move_here'].length > 0)) {
+                        bkgd = 'yellow';
+                    } else if (cell['white_can_move_here'].length > 1) {
+                        bkgd = 'lightgreen';
+                    } else {
+                        bkgd = 'lightblue';
+                    }
+                }
+                elem = $('*[data-square="' + posn + '"]');
+                elem.css('background', bkgd);
+                const title = `Square: ${cell.position}\nOccupant: ${cell['occupant'] || ''}\nProtects: ${cell['protects'] || ''}\nThreatens: ${cell['threatens'] || ''}\nProtected by: ${cell['is_protected_by'] || ''}\nThreatened by: ${cell['is_threatened_by'] || ''}`
+                elem.attr('title', title);
+            }
+        }
+
         $(document).ready(function() {
             let board;
             let url = `ws://${window.location.host}/ws/socket-server/`;
@@ -53,6 +82,9 @@
                 // console.log('D:', data);
                 if (data.type === 'chat') {
                     board.position(data.message);
+                    // if (is_cover.toLowerCase() == 'true') {
+                    //     make_cover(cover);
+                    // }
                 }
             }
             window.mobileCheck = function() {
@@ -176,6 +208,14 @@
                 is_cover = true;
                 make_cover(cover);
             });
+            $('.black_moves').click(function() {
+                is_cover = true;
+                make_moves(cover, 0);
+            });
+            $('.white_moves').click(function() {
+                is_cover = true;
+                make_moves(cover, 1);
+            });
             $("#myBoard > div > div > div > div").on('touchstart', function() {
                 imgs = $(this).children("img");
                 i = $(this).data('square')
@@ -220,8 +260,10 @@
     <h2>Chessboard Visualization</h2>
     <div id="myBoard" class="myBoard" style="width: 400px"></div>
     <p></p>
-    <button type="button" class="btn btn-sm btn-success cover">Coverage</button>
-    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;">Standard</a>
+    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;">Std</a>
+    <button type="button" class="btn btn-sm btn-success white_moves">W</button>
+    <button type="button" class="btn btn-sm btn-success black_moves">B</button>
+    <button type="button" class="btn btn-sm btn-success cover">Cvg</button>
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
