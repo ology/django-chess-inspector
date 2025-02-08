@@ -1,9 +1,15 @@
 # Django Chess Inspector
 Visualize chess piece move, threat, and protection status.
 
+Coverage:
+
 ![user interface](chess_coverage.png)
 
+Mouse hover:
+
 ![in action](coverage-in-action.png)
+
+Possible moves (for black):
 
 ![black moves](chess_moves.png)
 
