@@ -5,6 +5,8 @@ Visualize chess piece move, threat, and protection status.
 
 ![in action](coverage-in-action.png)
 
+![black moves](chess_moves.png)
+
 ---
 
 ## Install and run:
