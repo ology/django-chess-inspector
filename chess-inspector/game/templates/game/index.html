@@ -48,10 +48,13 @@
             for (const posn in cover) {
                 const cell = cover[posn]
                 let bkgd = 'lightgray';
+                if (('occupant' in cell) && ('is_threatened_by' in cell) && (cell['is_threatened_by'].length > 0)) {
+                    bkgd = 'pink'
+                }
                 if ((turn == 0) && ('black_can_move_here' in cell) && (cell['black_can_move_here'].length > 0)) {
                     if (('white_can_capture_here' in cell) && (cell['white_can_capture_here'].length > 0)) {
                         bkgd = 'yellow';
-                    } else if (('black_can_capture_here' in cell) && (cell['black_can_capture_here'].length > 0)) {
+                    } else if (('black_can_capture_here' in cell) && (cell['black_can_capture_here'].length > 1)) {
                         bkgd = 'lightgreen';
                     } else {
                         bkgd = 'tan';
@@ -60,7 +63,7 @@
                 else if ((turn == 1) && ('white_can_move_here' in cell) && (cell['white_can_move_here'].length > 0)) {
                     if (('black_can_capture_here' in cell) && (cell['black_can_capture_here'].length > 0)) {
                         bkgd = 'yellow';
-                    } else if (('white_can_capture_here' in cell) && (cell['white_can_capture_here'].length > 0)) {
+                    } else if (('white_can_capture_here' in cell) && (cell['white_can_capture_here'].length > 1)) {
                         bkgd = 'lightgreen';
                     } else {
                         bkgd = 'lightblue';
