@@ -284,7 +284,13 @@
     &nbsp;
     <input type="checkbox" name="legal" id="legal" title="Do not allow moving pieces offboard">
     <p></p>
-    <input type="text" class="form-control" id="show_fen" value="{{ fen|safe }}" disabled>
+    <form action="{% url 'game:fen' %}" method="post">
+        {% csrf_token %}
+        <input type="text" class="form-control" id="show_fen" name="show_fen" value="{{ fen|safe }}" required>
+        <button type="submit" class="btn btn-sm btn-secondary" title="Upload an FEN">Upload FEN</button>
+    </form>
+    <p></p>
+
 {% if pgn_file %}
     <div class="text-muted small pgn_file">
         Date: {{ pgn_date }}

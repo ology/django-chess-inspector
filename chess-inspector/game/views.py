@@ -76,3 +76,15 @@ def clear_pgn(request):
         ctrl.fen = request.POST.get('fen')
     ctrl.pgn_file = ""
     return redirect("game:index")
+
+@login_required
+def fen(request):
+    if request.method == "POST":
+        ctrl.fen = request.POST.get('show_fen')
+        fens = [ctrl.fen]
+        url = reverse('game:index')
+        url += f"?last_fen={ctrl.fen}"
+        response = HttpResponseRedirect(url)
+        response.set_cookie("fens", json.dumps(fens))
+    ctrl.pgn_file = ""
+    return response
