@@ -267,14 +267,14 @@
     <h2>Chessboard Visualization</h2>
     <div id="myBoard" class="myBoard" style="width: 400px"></div>
     <p></p>
-    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;">Std</a>
-    <button type="button" class="btn btn-sm btn-success white_moves">W</button>
-    <button type="button" class="btn btn-sm btn-success black_moves">B</button>
-    <button type="button" class="btn btn-sm btn-success cover">Cvg</button>
+    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;" title="Show standard chess coloring">Std</a>
+    <button type="button" class="btn btn-sm btn-success white_moves" title="Show white coverage coloring">W</button>
+    <button type="button" class="btn btn-sm btn-success black_moves" title="Show black coverage coloring">B</button>
+    <button type="button" class="btn btn-sm btn-success cover" title="Show full coverage coloring">Cvg</button>
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
-        <button type="submit" class="btn btn-sm btn-primary" title="Restart">⏮︎</button>
+        <button type="submit" class="btn btn-sm btn-primary" title="Restart game">⏮︎</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward">&lt;</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward">&gt;</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_end" title="Go to the end">⏭︎</button>
@@ -282,7 +282,7 @@
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
-        <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear">Clear</button>
+        <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear PGN">Clear</button>
     </form>
     &nbsp;
     <input type="checkbox" name="legal" id="legal" title="Do not allow moving pieces offboard">
