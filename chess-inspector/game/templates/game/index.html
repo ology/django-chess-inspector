@@ -328,6 +328,7 @@
     <button type="button" class="btn btn-sm btn-success white_moves" title="Show white coverage coloring">W</button>
     <button type="button" class="btn btn-sm btn-success black_moves" title="Show black coverage coloring">B</button>
     <button type="button" class="btn btn-sm btn-success cover" title="Show full coverage coloring">Cvg</button>
+        {% if pgn_file %}
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="{{ init_fen }}">
@@ -341,6 +342,7 @@
         <input type="hidden" name="fen" value="{{ init_fen }}">
         <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear PGN">Clr</button>
     </form>
+        {% endif %}
     &nbsp;
     <input type="checkbox" name="legal" id="legal" title="Do not allow moving pieces offboard">
     <p></p>
