@@ -10,6 +10,23 @@ from .controller import Controller
 
 ctrl = Controller()
 
+
+def _to_bool(value, default):
+    """
+    Coerce a value from request.POST.get(...) into a real bool.
+    - None (the field wasn't submitted at all) keeps the previous state,
+      rather than silently flipping it to False.
+    - Recognized truthy tokens (case-insensitive) become True.
+    - Anything else - including the literal string "false" - becomes
+      False. Plain truthiness on a string would get this backwards,
+      since "false" is a non-empty string and therefore truthy in Python.
+    """
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ('true', '1', 'on', 'yes')
+
 def login_page(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -36,7 +53,7 @@ def index(request):
         last_fen = ctrl.last_fen
         ctrl.fen = request.POST.get('fen')
         fen = ctrl.fen
-        ctrl.en_passant = request.POST.get('en_passant')
+        ctrl.en_passant = _to_bool(request.POST.get('en_passant'), default=ctrl.en_passant)
         is_cover = request.POST.get('is_cover')
         play_n = request.POST.get('play_n') or 0
     else:
