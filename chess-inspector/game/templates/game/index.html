@@ -224,7 +224,9 @@
                     csrfmiddlewaretoken: "{{ csrf_token }}",
                 };
                 $.post("{% url 'game:index' %}", payload, (data, status) => {
+                    const legalChecked = $('#legal').is(':checked');
                     $('body').html(data);
+                    $('#legal').prop('checked', legalChecked);
                 });
             }
             function onDrop (source, target, piece, newPos, oldPos, orientation) {
@@ -245,7 +247,9 @@
                         csrfmiddlewaretoken: "{{ csrf_token }}",
                     };
                     $.post("{% url 'game:index' %}", payload, (data, status) => {
+                        const legalChecked = $('#legal').is(':checked');
                         $('body').html(data);
+                        $('#legal').prop('checked', legalChecked);
                     });
                 }
             }
