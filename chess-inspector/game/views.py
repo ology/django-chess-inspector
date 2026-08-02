@@ -91,7 +91,6 @@ def index(request):
         "pgn_date": ctrl.pgn_date,
         "pgn_white": ctrl.pgn_white,
         "pgn_black": ctrl.pgn_black,
-        "turn": "White" if ctrl.board.turn else "Black",
     }
     return render(request, "game/index.html", context)
 
