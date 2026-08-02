@@ -1,0 +1,5 @@
+chess chess_coverage
+django
+channels
+channels["daphne"]
+whitenoise

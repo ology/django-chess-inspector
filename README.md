@@ -25,6 +25,9 @@ source ./bin/activate
 pip install chess chess_coverage
 pip install django
 pip install channels channels["daphne"]
+pip install whitenoise
+python manage.py collectstatic # ?
+
 cd chess-inspector/
 vim chess-inspector/inspector/settings.py # set the ALLOWED_HOSTS & CSRF_TRUSTED_ORIGINS
 python3 manage.py runserver 192.168.99.50:8080
