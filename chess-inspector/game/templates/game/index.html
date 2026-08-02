@@ -330,7 +330,7 @@
     <button type="button" class="btn btn-sm btn-success cover" title="Show full coverage coloring">Cvg</button>
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
-        <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
+        <input type="hidden" name="fen" value="{{ init_fen }}">
         <button type="submit" class="btn btn-sm btn-primary" title="Restart game">⏮︎</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward">&lt;</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward">&gt;</button>
@@ -338,7 +338,7 @@
     </form>
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
-        <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
+        <input type="hidden" name="fen" value="{{ init_fen }}">
         <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear PGN">Clr</button>
     </form>
     &nbsp;

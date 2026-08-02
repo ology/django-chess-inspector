@@ -11,6 +11,7 @@ from .controller import Controller
 
 ctrl = Controller()
 
+INIT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
 def _valid_fen(fen_str):
     try:
@@ -70,11 +71,10 @@ def index(request):
         play_n = request.POST.get('play_n') or 0
         ctrl.save_state(account_id=request.user.id)
     else:
-        init_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
         if not ctrl.fen:
             ctrl.load_state()
-        last_fen = request.GET.get('last_fen') or ctrl.last_fen or init_fen
-        fen = request.GET.get('fen') or ctrl.fen or init_fen
+        last_fen = request.GET.get('last_fen') or ctrl.last_fen or INIT_FEN
+        fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
         is_cover = request.GET.get('is_cover')
         play_n = request.GET.get('play_n') or 0
         ctrl.last_fen = last_fen
@@ -91,6 +91,7 @@ def index(request):
         "pgn_date": ctrl.pgn_date,
         "pgn_white": ctrl.pgn_white,
         "pgn_black": ctrl.pgn_black,
+        "init_fen": INIT_FEN,
     }
     return render(request, "game/index.html", context)
 
