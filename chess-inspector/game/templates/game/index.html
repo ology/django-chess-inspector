@@ -345,6 +345,9 @@
         {% endif %}
     &nbsp;
     <input type="checkbox" name="legal" id="legal" title="Do not allow moving pieces offboard">
+        {% if not pgn_file %}
+    <label for="legal">No off-board moves</label>
+        {% endif %}
     <p></p>
     <form action="{% url 'game:fen' %}" method="post">
         {% csrf_token %}
