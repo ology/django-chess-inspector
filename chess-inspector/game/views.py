@@ -81,12 +81,17 @@ def index(request):
 
 @login_required
 def pgn(request):
-    if request.method == "POST" and request.FILES['pgn']:
-        ctrl.pgn_file = request.FILES['pgn']
+    if request.method == "POST":
+        uploaded = request.FILES.get('pgn')
+        if not uploaded:
+            messages.error(request, "No PGN file was selected")
+            return redirect("game:index")
+        ctrl.pgn_file = uploaded
         fens = ctrl.pgn()
         response = HttpResponseRedirect(reverse('game:index'))
         response.set_cookie("fens", json.dumps(fens))
         return response
+    return redirect("game:index")
 
 @login_required
 def clear_pgn(request):
