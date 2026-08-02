@@ -41,6 +41,7 @@ class Controller:
         if not key in cover[m]:
             cover[m][key] = []
         cover[m][key].append(p)
+        cover[n]["moves"].append(m)
         return cover
 
     def white_neighborhood(self, file, neighbors, c, cover):
