@@ -1,3 +1,4 @@
+import chess
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -10,6 +11,13 @@ from .controller import Controller
 
 ctrl = Controller()
 
+
+def _valid_fen(fen_str):
+    try:
+        chess.Board(fen_str)
+        return True
+    except ValueError:
+        return False
 
 def _to_bool(value, default):
     """
@@ -49,9 +57,13 @@ def index(request):
     is_cover = False
     play_n = 0
     if request.method == "POST":
+        posted_fen = request.POST.get('fen')
+        if not _valid_fen(posted_fen):
+            messages.error(request, "That position couldn't be read - ignoring it")
+            return redirect("game:index")
         ctrl.last_fen = request.POST.get('last_fen')
         last_fen = ctrl.last_fen
-        ctrl.fen = request.POST.get('fen')
+        ctrl.fen = posted_fen
         fen = ctrl.fen
         ctrl.en_passant = _to_bool(request.POST.get('en_passant'), default=ctrl.en_passant)
         is_cover = request.POST.get('is_cover')
@@ -104,7 +116,11 @@ def clear_pgn(request):
 @login_required
 def fen(request):
     if request.method == "POST":
-        ctrl.fen = request.POST.get('show_fen')
+        candidate = request.POST.get('show_fen')
+        if not _valid_fen(candidate):
+            messages.error(request, "That FEN doesn't look valid")
+            return redirect("game:index")
+        ctrl.fen = candidate
         fens = [ctrl.fen]
         url = reverse('game:index')
         url += f"?last_fen={ctrl.fen}"
