@@ -22,14 +22,13 @@ git clone https://github.com/ology/django-chess-inspector.git
 cd django-chess-inspector
 python3 -m venv .
 source ./bin/activate
-pip install chess chess_coverage
-pip install django
-pip install channels channels["daphne"]
-pip install whitenoise
+pip install -r requirements.txt
+
 python manage.py collectstatic # ?
 
 cd chess-inspector/
-vim chess-inspector/inspector/settings.py # set the ALLOWED_HOSTS & CSRF_TRUSTED_ORIGINS
+cp inspector/inspector/settings-example.py inspector/inspector/settings.py
+vim chess-inspector/inspector/settings.py # set the ALLOWED_HOSTS & CSRF_TRUSTED_ORIGINS, etc.
 python3 manage.py runserver 192.168.99.50:8080
 ```
 ~

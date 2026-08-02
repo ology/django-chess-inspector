@@ -1,4 +1,5 @@
-chess chess_coverage
+chess
+chess_coverage
 django
 channels
 channels["daphne"]
