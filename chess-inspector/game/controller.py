@@ -21,6 +21,45 @@ class Controller:
     def __init__(self):
         pass
 
+    def save_state(self, account_id=None):
+        """
+        Persists the shared game's current position to a single row
+        (id=1) in the Game table - there's only ever one shared game in
+        this app, so this updates that one row rather than accumulating
+        a new row per move. account_id is stored for informational
+        purposes only (who moved most recently); it doesn't scope which
+        game this is, since the game itself is shared, not per-account.
+        """
+        try:
+            from .models import Game
+            saved, _ = Game.objects.get_or_create(
+                id=1, defaults={'account_id': account_id or 0}
+            )
+            if account_id is not None:
+                saved.account_id = account_id
+            saved.fen = self.fen
+            saved.last_fen = self.last_fen
+            saved.save()
+        except Exception as e:
+            self.logger.error(f"Could not persist game state: {e}")
+
+    def load_state(self):
+        """
+        Restores the shared game's last-saved position. Broadly
+        try/except'd on purpose: this gets called from GameConfig.ready()
+        at process startup, which on a brand new install runs BEFORE
+        `manage.py migrate` has created the table at all - this must not
+        raise in that case, just leave fen/last_fen at their defaults.
+        """
+        try:
+            from .models import Game
+            saved = Game.objects.filter(id=1).first()
+            if saved:
+                self.fen = saved.fen
+                self.last_fen = saved.last_fen
+        except Exception as e:
+            self.logger.error(f"Could not load persisted game state: {e}")
+
     def get_coverage(self):
         if self.fen:
             self.board = chess.Board(self.fen)
@@ -127,3 +166,4 @@ class Controller:
             fens.append(board.fen())
         # self.logger.debug(f"FENS: {fens}")
         return fens
+    

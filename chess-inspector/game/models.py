@@ -9,3 +9,5 @@ class Profile(models.Model):
 class Game(models.Model):
     account_id = models.BigIntegerField(blank=False)
     fen = models.CharField(max_length=100, blank=True)
+    last_fen = models.CharField(max_length=100, blank=True)
+    updated = models.DateTimeField(auto_now=True)

@@ -68,8 +68,11 @@ def index(request):
         ctrl.en_passant = _to_bool(request.POST.get('en_passant'), default=ctrl.en_passant)
         is_cover = request.POST.get('is_cover')
         play_n = request.POST.get('play_n') or 0
+        ctrl.save_state(account_id=request.user.id)
     else:
         init_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+        if not ctrl.fen:
+            ctrl.load_state()
         last_fen = request.GET.get('last_fen') or ctrl.last_fen or init_fen
         fen = request.GET.get('fen') or ctrl.fen or init_fen
         is_cover = request.GET.get('is_cover')
