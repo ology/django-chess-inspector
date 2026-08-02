@@ -58,8 +58,8 @@ def index(request):
         play_n = request.POST.get('play_n') or 0
     else:
         init_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-        last_fen = request.GET.get('last_fen') or init_fen
-        fen = request.GET.get('fen') or init_fen
+        last_fen = request.GET.get('last_fen') or ctrl.last_fen or init_fen
+        fen = request.GET.get('fen') or ctrl.fen or init_fen
         is_cover = request.GET.get('is_cover')
         play_n = request.GET.get('play_n') or 0
         ctrl.last_fen = last_fen

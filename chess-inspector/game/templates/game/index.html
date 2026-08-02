@@ -339,7 +339,7 @@
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <input type="hidden" name="fen" value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
-        <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear PGN">Clear</button>
+        <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear PGN">Clr</button>
     </form>
     &nbsp;
     <input type="checkbox" name="legal" id="legal" title="Do not allow moving pieces offboard">
