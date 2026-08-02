@@ -79,6 +79,60 @@
             }
         }
 
+        // --- Last-moved-piece indicator -----------------------------------
+        // Diffs the board part of two FEN strings to find which square(s)
+        // now hold a piece that's different from before (i.e. destination
+        // squares of whatever just moved) - deliberately excludes vacated
+        // origin squares, since we only want to circle where the piece
+        // *is now*, not where it came from. Works generically for castling
+        // (2 destinations: king + rook) and en passant (1 destination, even
+        // though 3 squares total changed) without any special-casing.
+        function boardPartOf(fenStr) {
+            return (fenStr || '').split(' ')[0];
+        }
+
+        function squaresFromBoardPart(boardPart) {
+            const squares = {};
+            const ranks = boardPart.split('/');
+            if (ranks.length !== 8) return squares; // malformed/empty FEN - bail safely
+            for (let r = 0; r < 8; r++) {
+                const rankNum = 8 - r;
+                let file = 0;
+                for (const ch of ranks[r]) {
+                    if (/\d/.test(ch)) {
+                        const empties = parseInt(ch, 10);
+                        for (let i = 0; i < empties; i++) {
+                            squares[String.fromCharCode(97 + file) + rankNum] = null;
+                            file++;
+                        }
+                    } else {
+                        squares[String.fromCharCode(97 + file) + rankNum] = ch;
+                        file++;
+                    }
+                }
+            }
+            return squares;
+        }
+
+        function lastMovedDestinationSquares(oldFen, newFen) {
+            const oldSquares = squaresFromBoardPart(boardPartOf(oldFen));
+            const newSquares = squaresFromBoardPart(boardPartOf(newFen));
+            const destinations = [];
+            for (const square in newSquares) {
+                if (newSquares[square] !== null && oldSquares[square] !== newSquares[square]) {
+                    destinations.push(square);
+                }
+            }
+            return destinations;
+        }
+
+        function markLastMoved(squares) {
+            $('.last-moved-circle').remove();
+            squares.forEach(function(square) {
+                $('*[data-square="' + square + '"]').append('<div class="last-moved-circle"></div>');
+            });
+        }
+
         $(document).ready(function() {
             let board;
             let url = `ws://${window.location.host}/ws/socket-server/`;
@@ -87,7 +141,9 @@
                 let data = JSON.parse(e.data);
                 // console.log('D:', data);
                 if (data.type === 'chat') {
+                    const beforeFen = Chessboard.objToFen(board.position());
                     board.position(data.message);
+                    markLastMoved(lastMovedDestinationSquares(beforeFen, data.message));
                     // if (is_cover.toLowerCase() == 'true') {
                     //     make_cover(cover);
                     // }
@@ -153,6 +209,7 @@
                 }
                 p = fen || last_fen;
                 board.position(p);
+                markLastMoved(lastMovedDestinationSquares(last_fen, fen));
             }
             function gamePost(is_cover, lastPos, newPos) {
                 chatSocket.send(JSON.stringify({
