@@ -29,9 +29,7 @@ cd chess-inspector/
 vim chess-inspector/inspector/settings.py # set the ALLOWED_HOSTS & CSRF_TRUSTED_ORIGINS
 python3 manage.py runserver 192.168.99.50:8080
 ```
-
 ~
-
 ```
 pip install gunicorn
 GUNICORN_CMD_ARGS="--bind=192.168.99.50:8080 --workers=3 --timeout 120" gunicorn inspector.wsgi:application
