@@ -87,5 +87,7 @@ def fen(request):
         url += f"?last_fen={ctrl.fen}"
         response = HttpResponseRedirect(url)
         response.set_cookie("fens", json.dumps(fens))
+    else:
+        response = redirect("game:index")
     ctrl.pgn_file = ""
     return response
