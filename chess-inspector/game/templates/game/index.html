@@ -171,6 +171,13 @@
             let cover;
             let play_n;
             let pgn_file;
+            function updateMoveCounter() {
+                if (data.length > 0) {
+                    $('#move_counter').text(play_n + ' / ' + (data.length - 1));
+                } else {
+                    $('#move_counter').text('');
+                }
+            }
             function init_game() {
                 fen = "{{ fen }}";
                 last_fen = "{{ last_fen }}";
@@ -210,6 +217,7 @@
                 p = fen || last_fen;
                 board.position(p);
                 markLastMoved(lastMovedDestinationSquares(last_fen, fen));
+                updateMoveCounter();
             }
             function gamePost(is_cover, lastPos, newPos) {
                 chatSocket.send(JSON.stringify({
@@ -257,18 +265,21 @@
             $('#play_end').click(function() {
                 if (typeof pgn_file !== 'undefined') {
                     play_n = data.length - 1;
+                    updateMoveCounter();
                     gamePost(is_cover, data[play_n - 1], data[play_n]);
                 }
             });
             $('#play_forward').click(function() {
                 if (typeof pgn_file !== 'undefined' && play_n < data.length - 1) {
                     play_n = play_n + 1;
+                    updateMoveCounter();
                     gamePost(is_cover, data[play_n - 1], data[play_n]);
                 }
             });
             $('#play_backward').click(function() {
                 if (typeof pgn_file !== 'undefined' && play_n > 0) {
                     play_n = play_n - 1;
+                    updateMoveCounter();
                     gamePost(is_cover, data[play_n - 1], data[play_n]);
                 }
             });
@@ -349,6 +360,8 @@
         {% csrf_token %}
         <input type="hidden" name="fen" value="{{ init_fen }}">
         <button type="submit" class="btn btn-sm btn-secondary" id="clear_pgn" title="Clear PGN">Clr</button>
+        &nbsp;
+        <span id="move_counter" class="text-muted small"></span>
     </form>
         {% endif %}
         {% if not pgn_file %}
