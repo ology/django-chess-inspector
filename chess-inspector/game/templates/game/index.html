@@ -352,8 +352,8 @@
         {% csrf_token %}
         <input type="hidden" name="fen" value="{{ init_fen }}">
         <button type="submit" class="btn btn-sm btn-primary" title="Restart game">⏮︎</button>
-        <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward 1 frame">&lt;</button>
-        <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward 1 frame">&gt;</button>
+        <button type="button" class="btn btn-sm btn-primary" id="play_backward" title="Play backward 1 frame">◀</button>
+        <button type="button" class="btn btn-sm btn-primary" id="play_forward" title="Play forward 1 frame">▶</button>
         <button type="button" class="btn btn-sm btn-primary" id="play_end" title="Go to the end">⏭︎</button>
     </form>
     <form action="{% url 'game:clear' %}" method="post" style="display: inline-block;">
