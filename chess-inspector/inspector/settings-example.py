@@ -93,7 +93,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'pgn')
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 # SESSION_SAVE_EVERY_REQUEST = True
-
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30   # 30 days, in seconds (default is 2 weeks: 1209600)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # False = survives closing the browser; True ignores COOKIE_AGE entirely and logs out on browser close
+SESSION_SAVE_EVERY_REQUEST = True        # sliding expiration: resets the countdown on every request
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
