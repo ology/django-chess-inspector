@@ -328,8 +328,12 @@
     <h2>Chessboard Visualization</h2>
     <div id="myBoard" class="myBoard" style="width: 400px"></div>
     <p></p>
-    <button type="button" class="btn btn-sm btn-success white_moves" title="Show white coverage coloring">W</button>
-    <button type="button" class="btn btn-sm btn-success black_moves" title="Show black coverage coloring">B</button>
+    <button type="button" class="btn btn-sm btn-success white_moves" title="Show white coverage coloring
+    green = can capture
+    blue = can move to">W</button>
+    <button type="button" class="btn btn-sm btn-success black_moves" title="Show black coverage coloring
+    green = can capture
+    brown = can move to">B</button>
     <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;" title="Show standard chess coloring">Std</a>
     <button type="button" class="btn btn-sm btn-success cover" title="Show full coverage coloring">Cvg</button>
         {% if pgn_file %}
