@@ -173,7 +173,7 @@
             let pgn_file;
             function updateMoveCounter() {
                 if (data.length > 0) {
-                    $('#move_counter').text(play_n + ' / ' + (data.length - 1));
+                    $('#move_counter').text(play_n + '/' + (data.length - 1));
                 } else {
                     $('#move_counter').text('');
                 }
@@ -347,6 +347,13 @@
     brown = can move to">B</button>
     <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" onclick="location.href=this.href+'?play_n={{ play_n }}&is_cover=false&en_passant=true&fen={{ fen|safe }}&last_fen={{ last_fen|safe }}';return false;" title="Show standard chess coloring">Std</a>
     <button type="button" class="btn btn-sm btn-success cover" title="Show full coverage coloring">Cvg</button>
+        {% if not pgn_file %}
+    <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
+        {% csrf_token %}
+        <input type="hidden" name="fen" value="{{ init_fen }}">
+        <button type="submit" class="btn btn-sm btn-primary" title="Restart game">⏮︎</button>
+    </form>
+        {% endif %}
         {% if pgn_file %}
     <form action="{% url 'game:index' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
