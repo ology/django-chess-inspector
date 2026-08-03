@@ -1,3 +1,8 @@
+a {
+    text-decoration: none; /* Removes the underline */
+    color: inherit; /* Uses the color of the parent text element */
+}
+
 .container {
     max-width: 700px;
     width: fit-content;
