@@ -325,6 +325,30 @@
             $('#piece_selector').on('change', function() {
                 $('#place_piece_msg').toggle($(this).val() !== '');
             });
+            $('#clear_board').on('click', function() {
+                const oldPos = board.position();
+                board.clear();
+                const newPos = {};
+                $('#piece_selector').val('');
+                $('#place_piece_msg').hide();
+
+                chatSocket.send(JSON.stringify({
+                    message: Chessboard.objToFen(newPos)
+                }));
+                const payload = {
+                    play_n: play_n,
+                    is_cover: is_cover,
+                    en_passant: true,
+                    fen: Chessboard.objToFen(newPos),
+                    last_fen: Chessboard.objToFen(oldPos),
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                };
+                $.post("{% url 'game:index' %}", payload, (data, status) => {
+                    const legalChecked = $('#legal').is(':checked');
+                    $('body').html(data);
+                    $('#legal').prop('checked', legalChecked);
+                });
+            });
             $("#myBoard > div > div > div > div").on('click', function() {
                 const selectedPiece = $('#piece_selector').val();
                 if (!selectedPiece) {
@@ -416,6 +440,7 @@
     <label for="legal">No off-board moves</label>
         {% endif %}
     <p></p>
+    <button type="button" id="clear_board" class="btn btn-sm btn-secondary" title="Clear the board of all pieces">Clear board</button>
     <select id="piece_selector" class="form-select form-select-sm" style="width: auto; display: inline-block;" title="Select a piece, then click an empty square to place it there">
         <option value="">Add a piece&hellip;</option>
         <option value="wK">White King</option>
