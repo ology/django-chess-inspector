@@ -322,6 +322,9 @@
                     $('[data-square]').removeClass("hover");
                 }
             );
+            $('#piece_selector').on('change', function() {
+                $('#place_piece_msg').toggle($(this).val() !== '');
+            });
             $("#myBoard > div > div > div > div").on('click', function() {
                 const selectedPiece = $('#piece_selector').val();
                 if (!selectedPiece) {
@@ -337,6 +340,7 @@
                 newPos[square] = selectedPiece;
                 board.position(newPos);
                 $('#piece_selector').val('');
+                $('#place_piece_msg').hide();
 
                 chatSocket.send(JSON.stringify({
                     message: Chessboard.objToFen(newPos)
@@ -427,6 +431,8 @@
         <option value="bN">Black Knight</option>
         <option value="bP">Black Pawn</option>
     </select>
+    &nbsp;
+    <span id="place_piece_msg" class="text-muted small" style="display: none;">Click a square to place the piece</span>
     <p></p>
     <form action="{% url 'game:fen' %}" method="post">
         {% csrf_token %}
