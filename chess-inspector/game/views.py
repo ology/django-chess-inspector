@@ -89,6 +89,7 @@ def index(request):
         "play_n": play_n,
         "pgn_file": ctrl.pgn_file,
         "pgn_date": ctrl.pgn_date,
+        "pgn_site": ctrl.pgn_site,
         "pgn_white": ctrl.pgn_white,
         "pgn_black": ctrl.pgn_black,
         "init_fen": INIT_FEN,

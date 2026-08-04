@@ -12,6 +12,7 @@ class Controller:
     last_fen = ''
     pgn_file = ''
     pgn_date = ''
+    pgn_site = ''
     pgn_white = ''
     pgn_black = ''
     board = None
@@ -157,6 +158,7 @@ class Controller:
         pgn = io.StringIO(game_text)
         game = chess.pgn.read_game(pgn)
         self.pgn_date = game.headers['Date']
+        self.pgn_site = game.headers['Site']
         self.pgn_white = game.headers['White']
         self.pgn_black = game.headers['Black']
         board = game.board()
