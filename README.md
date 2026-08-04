@@ -20,8 +20,10 @@ Possible moves (for black):
 ```
 git clone https://github.com/ology/django-chess-inspector.git
 cd django-chess-inspector
+
 python3 -m venv .
 source ./bin/activate
+
 pip install -r requirements.txt
 
 python manage.py collectstatic # ?
