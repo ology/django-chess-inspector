@@ -26,7 +26,7 @@ source ./bin/activate
 
 pip install -r requirements.txt
 
-python manage.py collectstatic # ?
+python manage.py collectstatic
 
 cd chess-inspector/
 cp inspector/inspector/settings-example.py inspector/inspector/settings.py
