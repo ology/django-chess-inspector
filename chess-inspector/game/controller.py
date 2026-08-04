@@ -167,5 +167,11 @@ class Controller:
             board.push(move)
             fens.append(board.fen())
         # self.logger.debug(f"FENS: {fens}")
+        # Point the shared game's current position at the start of *this*
+        # game. Without this, self.fen/self.last_fen are left untouched by
+        # a PGN upload, so the index page keeps rendering whatever fen was
+        # previously persisted (e.g. from the last manual move or a prior
+        # PGN) instead of the game the user just selected.
+        self.last_fen = fens[0]
+        self.fen = fens[0]
         return fens
-    

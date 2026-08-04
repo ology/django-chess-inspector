@@ -105,6 +105,7 @@ def pgn(request):
             return redirect("game:index")
         ctrl.pgn_file = uploaded
         fens = ctrl.pgn()
+        ctrl.save_state(account_id=request.user.id)
         response = HttpResponseRedirect(reverse('game:index'))
         response.set_cookie("fens", json.dumps(fens))
         return response
