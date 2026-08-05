@@ -71,8 +71,7 @@ def index(request):
         play_n = request.POST.get('play_n') or 0
         ctrl.save_state(account_id=request.user.id)
     else:
-        if not ctrl.fen:
-            ctrl.load_state()
+        ctrl.load_state()
         last_fen = request.GET.get('last_fen') or ctrl.last_fen or INIT_FEN
         fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
         is_cover = request.GET.get('is_cover')
