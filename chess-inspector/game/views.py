@@ -134,3 +134,16 @@ def fen(request):
         response = redirect("game:index")
     ctrl.pgn_file = ""
     return response
+
+@login_required
+def probability(request):
+    ctrl.load_state()
+    fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
+    ctrl.fen = fen
+    move_probs = ctrl.get_move_probabilities()
+    context = {
+        "fen": fen,
+        "move_probs": move_probs,
+        "init_fen": INIT_FEN,
+    }
+    return render(request, "game/probability.html", context)

@@ -13,6 +13,14 @@
   <script src="{% static 'js/chessboard-1.0.0.js' %}" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.css' %}" crossorigin="anonymous">
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  <style>
+    /* Capture squares get a solid border on top of their heat color so
+       they read as distinct even at low intensity, rather than relying
+       on color alone (helps colorblind users too). */
+    .capture-square {
+        box-shadow: inset 0 0 0 3px rgba(220, 53, 69, 0.9);
+    }
+  </style>
   <script>
     function preventBehavior(e) {
         e.preventDefault();
@@ -27,45 +35,82 @@
         return check;
     };
 
-    // Highest probability seen across the whole board, used to scale
-    // the color intensity of every destination square relative to each
-    // other rather than to a fixed 0-1 range (a piece with only one
-    // legal move would otherwise always paint at full-strength red,
-    // even though "1 legal move" isn't inherently more notable than a
-    // 1-in-2 chance on a more mobile piece).
+    // moveProbs: { originSquare: { destSquare: {probability, capture} } }
     let moveProbs = {};
-    let maxProb = 0;
 
-    function clearHighlights() {
-        $('[data-square]').css('background', '');
+    // Aggregated across every piece: aggregate[destSquare] =
+    // { total: sum of probabilities from all pieces reaching it,
+    //   capture: true if ANY piece can capture there,
+    //   contributors: [ "e2->e4 (33.3%)", ... ] for the tooltip }
+    let aggregate = {};
+    let maxAggregate = 0;
+
+    function buildAggregate() {
+        aggregate = {};
+        maxAggregate = 0;
+        for (const origin in moveProbs) {
+            for (const dest in moveProbs[origin]) {
+                const info = moveProbs[origin][dest];
+                if (!aggregate[dest]) {
+                    aggregate[dest] = { total: 0, capture: false, contributors: [] };
+                }
+                aggregate[dest].total += info.probability;
+                aggregate[dest].capture = aggregate[dest].capture || info.capture;
+                aggregate[dest].contributors.push(
+                    `${origin}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`
+                );
+                maxAggregate = Math.max(maxAggregate, aggregate[dest].total);
+            }
+        }
     }
 
+    function clearHighlights() {
+        $('[data-square]').css('background', '').removeClass('capture-square').removeAttr('title');
+    }
+
+    // Paints every square any piece can reach, all at once.
+    function showAggregateHeatmap() {
+        clearHighlights();
+        for (const dest in aggregate) {
+            const cell = aggregate[dest];
+            const intensity = maxAggregate ? (cell.total / maxAggregate) : 0;
+            const elem = $('*[data-square="' + dest + '"]');
+            elem.css('background', `rgba(255, 140, 0, ${0.15 + 0.65 * intensity})`);
+            if (cell.capture) {
+                elem.addClass('capture-square');
+            }
+            elem.attr('title', cell.contributors.join('\n'));
+        }
+    }
+
+    // Narrows the view to just one piece's own destinations, still
+    // distinguishing its capture squares from its quiet moves.
     function showProbabilitiesFor(square) {
         clearHighlights();
         const dests = moveProbs[square];
         if (!dests) {
             return;
         }
+        let localMax = 0;
         for (const dest in dests) {
-            const p = dests[dest];
-            const intensity = maxProb ? (p / maxProb) : 0;
-            $('*[data-square="' + dest + '"]').css(
-                'background', `rgba(220, 53, 69, ${0.15 + 0.65 * intensity})`
-            );
-            $('*[data-square="' + dest + '"]').attr(
-                'title', `${square} -> ${dest}: ${(p * 100).toFixed(1)}%`
-            );
+            localMax = Math.max(localMax, dests[dest].probability);
+        }
+        for (const dest in dests) {
+            const info = dests[dest];
+            const intensity = localMax ? (info.probability / localMax) : 0;
+            const elem = $('*[data-square="' + dest + '"]');
+            elem.css('background', `rgba(220, 53, 69, ${0.15 + 0.65 * intensity})`);
+            if (info.capture) {
+                elem.addClass('capture-square');
+            }
+            elem.attr('title', `${square}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`);
         }
         $('*[data-square="' + square + '"]').css('background', 'lightblue');
     }
 
     $(document).ready(function() {
         moveProbs = {{ move_probs|safe }};
-        for (const origin in moveProbs) {
-            for (const dest in moveProbs[origin]) {
-                maxProb = Math.max(maxProb, moveProbs[origin][dest]);
-            }
-        }
+        buildAggregate();
 
         const config = {
             pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png',
@@ -79,13 +124,16 @@
             $('#myBoard').css('width', vpw + 'px');
         }
 
+        // Show the full-board heatmap as soon as the board is drawn.
+        showAggregateHeatmap();
+
         $("#myBoard").on('click', '[data-square]', function() {
             const square = $(this).data('square');
             showProbabilitiesFor(square);
         });
 
-        $('#clear_highlights').on('click', function() {
-            clearHighlights();
+        $('#show_all').on('click', function() {
+            showAggregateHeatmap();
         });
     });
   </script>
@@ -107,12 +155,15 @@
     <p></p>
 
     <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" title="Back to the main board">Back to Board</a>
-    <button type="button" id="clear_highlights" class="btn btn-sm btn-secondary" title="Clear highlighted squares">Clear</button>
+    <button type="button" id="show_all" class="btn btn-sm btn-primary" title="Show every reachable square at once">Show All</button>
 
     <p></p>
     <div class="text-muted small">
-        Click any piece to see its legal destination squares, shaded by
-        probability (uniform over that piece's own legal moves).
+        Orange shading shows every square any piece can reach right now,
+        darker where more pieces (or higher-probability moves) converge.
+        Squares outlined in red are reachable by capture. Click a single
+        piece to isolate just its own moves; hover any highlighted
+        square for the exact breakdown.
     </div>
 
     <p></p>
