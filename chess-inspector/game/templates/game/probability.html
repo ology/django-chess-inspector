@@ -1,0 +1,130 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Chess Inspector - Move Probabilities</title>
+  <link rel="icon" type="image/png" href="{% static 'favicon.ico' %}">
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script src="{% static 'js/jquery.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.min.js' %}" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+  <script src="{% static 'js/chessboard-1.0.0.js' %}" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.css' %}" crossorigin="anonymous">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  <script>
+    function preventBehavior(e) {
+        e.preventDefault();
+    };
+    document.addEventListener("touchmove", preventBehavior, {passive: false});
+
+    // Same mobile-detect helper used on the main board screen, so the
+    // board sizes itself the same way on phones.
+    window.mobileCheck = function() {
+        let check = false;
+        (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+        return check;
+    };
+
+    // Highest probability seen across the whole board, used to scale
+    // the color intensity of every destination square relative to each
+    // other rather than to a fixed 0-1 range (a piece with only one
+    // legal move would otherwise always paint at full-strength red,
+    // even though "1 legal move" isn't inherently more notable than a
+    // 1-in-2 chance on a more mobile piece).
+    let moveProbs = {};
+    let maxProb = 0;
+
+    function clearHighlights() {
+        $('[data-square]').css('background', '');
+    }
+
+    function showProbabilitiesFor(square) {
+        clearHighlights();
+        const dests = moveProbs[square];
+        if (!dests) {
+            return;
+        }
+        for (const dest in dests) {
+            const p = dests[dest];
+            const intensity = maxProb ? (p / maxProb) : 0;
+            $('*[data-square="' + dest + '"]').css(
+                'background', `rgba(220, 53, 69, ${0.15 + 0.65 * intensity})`
+            );
+            $('*[data-square="' + dest + '"]').attr(
+                'title', `${square} -> ${dest}: ${(p * 100).toFixed(1)}%`
+            );
+        }
+        $('*[data-square="' + square + '"]').css('background', 'lightblue');
+    }
+
+    $(document).ready(function() {
+        moveProbs = {{ move_probs|safe }};
+        for (const origin in moveProbs) {
+            for (const dest in moveProbs[origin]) {
+                maxProb = Math.max(maxProb, moveProbs[origin][dest]);
+            }
+        }
+
+        const config = {
+            pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png',
+            draggable: false,
+            position: "{{ fen }}",
+        };
+        const board = Chessboard('myBoard', config);
+
+        if (window.mobileCheck()) {
+            const vpw = $(window).width() - 22;
+            $('#myBoard').css('width', vpw + 'px');
+        }
+
+        $("#myBoard").on('click', '[data-square]', function() {
+            const square = $(this).data('square');
+            showProbabilitiesFor(square);
+        });
+
+        $('#clear_highlights').on('click', function() {
+            clearHighlights();
+        });
+    });
+  </script>
+</head>
+<body>
+
+<div class="container" id="container">
+    <p></p>
+
+{% if messages %}
+    {% for message in messages %}
+        <h2 style="color: green;">{{ message }}</h2>
+    {% endfor %}
+{% endif %}
+
+    <h2><a href="/">Chessboard Visualization</a></h2>
+    <h4 class="text-muted">Move Probabilities</h4>
+    <div id="myBoard" class="myBoard" style="width: 400px"></div>
+    <p></p>
+
+    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" title="Back to the main board">Back to Board</a>
+    <button type="button" id="clear_highlights" class="btn btn-sm btn-secondary" title="Clear highlighted squares">Clear</button>
+
+    <p></p>
+    <div class="text-muted small">
+        Click any piece to see its legal destination squares, shaded by
+        probability (uniform over that piece's own legal moves).
+    </div>
+
+    <p></p>
+    <div id="footer" class="text-muted small">
+      <hr>
+      Built by <a href="https://www.ology.net/">Gene</a>
+      with <a href="https://www.djangoproject.com/">Django</a> +
+      <a href="https://pypi.org/project/chess/">Chess</a> +
+      <a href="https://chessboardjs.com/index.html">Chessboard</a>
+    </div>
+    <p></p>
+</div>
+
+</body>
+</html>
