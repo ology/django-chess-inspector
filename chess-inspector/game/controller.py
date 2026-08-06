@@ -237,7 +237,7 @@ class Controller:
                         # rather than dividing by zero, so nothing gets
                         # colored for it.
                         continue
-                    per_move = 1 / n
+                    per_move = n / 64
                 elif calc == "weighted":
                     n = len(moves)
                     piece = board.piece_at(origin)
