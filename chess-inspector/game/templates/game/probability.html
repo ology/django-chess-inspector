@@ -208,15 +208,14 @@
     <div id="myBoard" class="myBoard" style="width: 400px"></div>
     <p></p>
 
-    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" title="Back to the main board">Back to Board</a>
+    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" title="Back to the main board">&lt; Return</a>
     <button type="button" id="show_both" class="btn btn-sm btn-primary" title="Show both sides' reach">Both</button>
     <button type="button" id="show_white" class="btn btn-sm btn-outline-primary" title="Show only White's reach">White</button>
     <button type="button" id="show_black" class="btn btn-sm btn-outline-danger" title="Show only Black's reach">Black</button>
-    <p></p>
     <select id="calc_select" class="form-select form-select-sm d-inline-block" style="width: auto;" title="How probability is calculated">
-        <option value="uniform" {% if calc == "uniform" %}selected{% endif %}>Uniform per piece</option>
-        <option value="weighted" {% if calc == "weighted" %}selected{% endif %}>Weighted by piece value</option>
-        <option value="by_moves" {% if calc == "by_moves" %}selected{% endif %}>By piece move number</option>
+        <option value="uniform" {% if calc == "uniform" %}selected{% endif %}>Uniform</option>
+        <option value="weighted" {% if calc == "weighted" %}selected{% endif %}>Weighted</option>
+        <option value="by_moves" {% if calc == "by_moves" %}selected{% endif %}>Moves</option>
     </select>
 
     <p></p>
