@@ -14,10 +14,6 @@
   <link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.css' %}" crossorigin="anonymous">
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
   <style>
-    /* Capture squares get a gold inset ring on top of their heat color,
-       kept separate from the blue/red side coloring so "reachable by
-       capture" reads as its own signal rather than blending into
-       whichever side's color happens to be there. */
     .capture-square {
         box-shadow: inset 0 0 0 3px rgba(255, 7, 7, 0.77);
     }
