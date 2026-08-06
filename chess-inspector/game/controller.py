@@ -31,7 +31,8 @@ class Controller:
     }
 
     def __init__(self):
-        pass
+        self.pgn_filename = ''
+        self.fens = []
 
     def save_state(self, account_id=None):
         """
@@ -51,6 +52,12 @@ class Controller:
                 saved.account_id = account_id
             saved.fen = self.fen
             saved.last_fen = self.last_fen
+            saved.pgn_filename = self.pgn_filename
+            saved.pgn_date = self.pgn_date
+            saved.pgn_site = self.pgn_site
+            saved.pgn_white = self.pgn_white
+            saved.pgn_black = self.pgn_black
+            saved.fens = self.fens
             saved.save()
         except Exception as e:
             self.logger.error(f"Could not persist game state: {e}")
@@ -69,6 +76,12 @@ class Controller:
             if saved:
                 self.fen = saved.fen
                 self.last_fen = saved.last_fen
+                self.pgn_filename = saved.pgn_filename
+                self.pgn_date = saved.pgn_date
+                self.pgn_site = saved.pgn_site
+                self.pgn_white = saved.pgn_white
+                self.pgn_black = saved.pgn_black
+                self.fens = saved.fens or []
         except Exception as e:
             self.logger.error(f"Could not load persisted game state: {e}")
 
@@ -168,6 +181,10 @@ class Controller:
             game_text = game_text + line.decode()
         pgn = io.StringIO(game_text)
         game = chess.pgn.read_game(pgn)
+        # str(UploadedFile) already returns its filename, but going
+        # through getattr keeps this from blowing up if pgn_file is ever
+        # something else (e.g. '' before any upload, or a test double).
+        self.pgn_filename = getattr(self.pgn_file, 'name', '') or ''
         self.pgn_date = game.headers['Date']
         self.pgn_site = game.headers['Site']
         self.pgn_white = game.headers['White']
@@ -185,6 +202,7 @@ class Controller:
         # PGN) instead of the game the user just selected.
         self.last_fen = fens[0]
         self.fen = fens[0]
+        self.fens = fens
         return fens
 
     def get_move_probabilities(self, calc="uniform"):
@@ -237,7 +255,7 @@ class Controller:
                         # rather than dividing by zero, so nothing gets
                         # colored for it.
                         continue
-                    per_move = n / 64
+                    per_move = 1 / n
                 elif calc == "weighted":
                     n = len(moves)
                     piece = board.piece_at(origin)
@@ -292,3 +310,4 @@ class Controller:
         if board.is_capture(move) and not board.is_en_passant(move):
             return len(dest_cover.get("is_protected_by", [])) > 0
         return len(dest_cover.get(f"{opponent}_can_capture_here", [])) > 0
+    

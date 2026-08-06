@@ -57,6 +57,12 @@ def login_page(request):
 def index(request):
     is_cover = False
     play_n = 0
+    # Resync from the DB before anything else, on every request - not just
+    # GET. This is what makes pgn_filename/pgn_date/pgn_site/pgn_white/
+    # pgn_black/fens (and fen/last_fen) consistent no matter which worker
+    # process ends up handling this request versus whichever one handled
+    # the upload or the last move.
+    ctrl.load_state()
     if request.method == "POST":
         posted_fen = request.POST.get('fen')
         if not _valid_fen(posted_fen):
@@ -71,7 +77,6 @@ def index(request):
         play_n = request.POST.get('play_n') or 0
         ctrl.save_state(account_id=request.user.id)
     else:
-        ctrl.load_state()
         last_fen = request.GET.get('last_fen') or ctrl.last_fen or INIT_FEN
         fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
         is_cover = request.GET.get('is_cover')
@@ -86,11 +91,20 @@ def index(request):
         "coverage": coverage,
         "is_cover": is_cover,
         "play_n": play_n,
-        "pgn_file": ctrl.pgn_file,
+        # Was ctrl.pgn_file (the raw UploadedFile) - that's per-process,
+        # never persisted, and not meaningfully renderable across workers.
+        # pgn_filename is the persisted stand-in and renders identically
+        # for the template's truthiness checks and display.
+        "pgn_file": ctrl.pgn_filename,
         "pgn_date": ctrl.pgn_date,
         "pgn_site": ctrl.pgn_site,
         "pgn_white": ctrl.pgn_white,
         "pgn_black": ctrl.pgn_black,
+        # Replaces the old "fens" cookie - fed straight into the page the
+        # same way move_probs already is in probability.html, so the play
+        # forward/backward/end controls no longer depend on parsing a
+        # cookie value through several layers of escaping.
+        "fens": json.dumps(ctrl.fens),
         "init_fen": INIT_FEN,
     }
     return render(request, "game/index.html", context)
@@ -103,11 +117,9 @@ def pgn(request):
             messages.error(request, "No PGN file was selected")
             return redirect("game:index")
         ctrl.pgn_file = uploaded
-        fens = ctrl.pgn()
+        ctrl.pgn()
         ctrl.save_state(account_id=request.user.id)
-        response = HttpResponseRedirect(reverse('game:index'))
-        response.set_cookie("fens", json.dumps(fens))
-        return response
+        return redirect("game:index")
     return redirect("game:index")
 
 @login_required
@@ -115,6 +127,13 @@ def clear_pgn(request):
     if request.method == "POST":
         ctrl.fen = request.POST.get('fen')
     ctrl.pgn_file = ""
+    ctrl.pgn_filename = ""
+    ctrl.pgn_date = ""
+    ctrl.pgn_site = ""
+    ctrl.pgn_white = ""
+    ctrl.pgn_black = ""
+    ctrl.fens = []
+    ctrl.save_state(account_id=request.user.id)
     return redirect("game:index")
 
 @login_required

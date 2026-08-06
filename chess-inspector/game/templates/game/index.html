@@ -197,15 +197,7 @@
                 if (is_cover.toLowerCase() == 'true') {
                     make_cover(cover);
                 }
-                data = []
-                const fens = getCookieValue('fens');
-                if (fens) {
-                    let string = fens.replace(/\\054/g, ',');
-                    string = string.replace(/\\/g, "");
-                    string = string.replace(/^"/, "");
-                    string = string.replace(/"$/, "");
-                    data = JSON.parse(string);
-                }
+                data = {{ fens|safe }};
                 play_n = {{ play_n }};
                 pgn_file = "{{ pgn_file }}";
                 if ((typeof pgn_file == 'undefined') || (pgn_file == "")) {
