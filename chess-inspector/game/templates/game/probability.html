@@ -14,11 +14,20 @@
   <link rel="stylesheet" href="{% static 'css/chessboard-1.0.0.css' %}" crossorigin="anonymous">
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
   <style>
-    /* Capture squares get a solid border on top of their heat color so
-       they read as distinct even at low intensity, rather than relying
-       on color alone (helps colorblind users too). */
+    /* Capture squares get a gold inset ring on top of their heat color,
+       kept separate from the blue/red side coloring so "reachable by
+       capture" reads as its own signal rather than blending into
+       whichever side's color happens to be there. */
     .capture-square {
-        box-shadow: inset 0 0 0 3px rgba(220, 53, 69, 0.9);
+        box-shadow: inset 0 0 0 3px rgba(255, 193, 7, 0.95);
+    }
+    #legend span {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        margin-right: 4px;
+        vertical-align: middle;
     }
   </style>
   <script>
@@ -27,40 +36,43 @@
     };
     document.addEventListener("touchmove", preventBehavior, {passive: false});
 
-    // Same mobile-detect helper used on the main board screen, so the
-    // board sizes itself the same way on phones.
     window.mobileCheck = function() {
         let check = false;
         (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
         return check;
     };
 
-    // moveProbs: { originSquare: { destSquare: {probability, capture} } }
-    let moveProbs = {};
+    // moveProbs: { "white": {origin: {dest: {probability, capture}}}, "black": {...} }
+    let moveProbs = { white: {}, black: {} };
 
-    // Aggregated across every piece: aggregate[destSquare] =
-    // { total: sum of probabilities from all pieces reaching it,
-    //   capture: true if ANY piece can capture there,
-    //   contributors: [ "e2->e4 (33.3%)", ... ] for the tooltip }
+    const WHITE_RGB = [13, 110, 253];   // bootstrap primary blue
+    const BLACK_RGB = [220, 53, 69];    // bootstrap danger red
+
+    // aggregate[dest] = { white: total, black: total, capture: bool, contributors: [] }
     let aggregate = {};
-    let maxAggregate = 0;
+    let maxCombined = 0;
 
     function buildAggregate() {
         aggregate = {};
-        maxAggregate = 0;
-        for (const origin in moveProbs) {
-            for (const dest in moveProbs[origin]) {
-                const info = moveProbs[origin][dest];
-                if (!aggregate[dest]) {
-                    aggregate[dest] = { total: 0, capture: false, contributors: [] };
+        maxCombined = 0;
+        for (const side of ['white', 'black']) {
+            for (const origin in moveProbs[side]) {
+                for (const dest in moveProbs[side][origin]) {
+                    const info = moveProbs[side][origin][dest];
+                    if (!aggregate[dest]) {
+                        aggregate[dest] = { white: 0, black: 0, capture: false, contributors: [] };
+                    }
+                    aggregate[dest][side] += info.probability;
+                    aggregate[dest].capture = aggregate[dest].capture || info.capture;
+                    aggregate[dest].contributors.push(
+                        `${side} ${origin}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`
+                    );
                 }
-                aggregate[dest].total += info.probability;
-                aggregate[dest].capture = aggregate[dest].capture || info.capture;
-                aggregate[dest].contributors.push(
-                    `${origin}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`
-                );
-                maxAggregate = Math.max(maxAggregate, aggregate[dest].total);
             }
+        }
+        for (const dest in aggregate) {
+            const combined = aggregate[dest].white + aggregate[dest].black;
+            maxCombined = Math.max(maxCombined, combined);
         }
     }
 
@@ -68,14 +80,35 @@
         $('[data-square]').css('background', '').removeClass('capture-square').removeAttr('title');
     }
 
-    // Paints every square any piece can reach, all at once.
-    function showAggregateHeatmap() {
+    // sides: array containing 'white', 'black', or both - controls which
+    // side(s) contribute to the heat shown right now.
+    function showAggregateHeatmap(sides) {
         clearHighlights();
         for (const dest in aggregate) {
             const cell = aggregate[dest];
-            const intensity = maxAggregate ? (cell.total / maxAggregate) : 0;
+            const white = sides.includes('white') ? cell.white : 0;
+            const black = sides.includes('black') ? cell.black : 0;
+            const combined = white + black;
+            if (combined <= 0) {
+                continue;
+            }
+            const intensity = maxCombined ? (combined / maxCombined) : 0;
+            const alpha = 0.15 + 0.65 * intensity;
+
+            // Blend blue/red proportionally to each side's share of this
+            // square's total, so a square only white can reach is pure
+            // blue, only black can reach is pure red, and a contested
+            // square lands somewhere in between (visually purple-ish).
+            const wShare = white / combined;
+            const bShare = black / combined;
+            const rgb = [
+                Math.round(WHITE_RGB[0] * wShare + BLACK_RGB[0] * bShare),
+                Math.round(WHITE_RGB[1] * wShare + BLACK_RGB[1] * bShare),
+                Math.round(WHITE_RGB[2] * wShare + BLACK_RGB[2] * bShare),
+            ];
+
             const elem = $('*[data-square="' + dest + '"]');
-            elem.css('background', `rgba(255, 140, 0, ${0.15 + 0.65 * intensity})`);
+            elem.css('background', `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`);
             if (cell.capture) {
                 elem.addClass('capture-square');
             }
@@ -83,14 +116,15 @@
         }
     }
 
-    // Narrows the view to just one piece's own destinations, still
-    // distinguishing its capture squares from its quiet moves.
-    function showProbabilitiesFor(square) {
+    // Narrows the view to just one piece's own destinations (color is
+    // implied by which origin square was clicked).
+    function showProbabilitiesFor(side, square) {
         clearHighlights();
-        const dests = moveProbs[square];
+        const dests = moveProbs[side][square];
         if (!dests) {
             return;
         }
+        const color = side === 'white' ? WHITE_RGB : BLACK_RGB;
         let localMax = 0;
         for (const dest in dests) {
             localMax = Math.max(localMax, dests[dest].probability);
@@ -99,13 +133,21 @@
             const info = dests[dest];
             const intensity = localMax ? (info.probability / localMax) : 0;
             const elem = $('*[data-square="' + dest + '"]');
-            elem.css('background', `rgba(220, 53, 69, ${0.15 + 0.65 * intensity})`);
+            elem.css('background', `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${0.15 + 0.65 * intensity})`);
             if (info.capture) {
                 elem.addClass('capture-square');
             }
-            elem.attr('title', `${square}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`);
+            elem.attr('title', `${side} ${square}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`);
         }
-        $('*[data-square="' + square + '"]').css('background', 'lightblue');
+        $('*[data-square="' + square + '"]').css('background', 'lightgreen');
+    }
+
+    // Figures out which side (if any) has a piece with legal moves on
+    // the clicked square, since a click only gives us the square name.
+    function originSide(square) {
+        if (moveProbs.white[square]) return 'white';
+        if (moveProbs.black[square]) return 'black';
+        return null;
     }
 
     $(document).ready(function() {
@@ -124,17 +166,21 @@
             $('#myBoard').css('width', vpw + 'px');
         }
 
-        // Show the full-board heatmap as soon as the board is drawn.
-        showAggregateHeatmap();
+        showAggregateHeatmap(['white', 'black']);
 
         $("#myBoard").on('click', '[data-square]', function() {
             const square = $(this).data('square');
-            showProbabilitiesFor(square);
+            const side = originSide(square);
+            if (side) {
+                showProbabilitiesFor(side, square);
+            } else {
+                clearHighlights();
+            }
         });
 
-        $('#show_all').on('click', function() {
-            showAggregateHeatmap();
-        });
+        $('#show_both').on('click', function() { showAggregateHeatmap(['white', 'black']); });
+        $('#show_white').on('click', function() { showAggregateHeatmap(['white']); });
+        $('#show_black').on('click', function() { showAggregateHeatmap(['black']); });
     });
   </script>
 </head>
@@ -155,15 +201,27 @@
     <p></p>
 
     <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" title="Back to the main board">Back to Board</a>
-    <button type="button" id="show_all" class="btn btn-sm btn-primary" title="Show every reachable square at once">Show All</button>
+    <button type="button" id="show_both" class="btn btn-sm btn-primary" title="Show both sides' reach">Both</button>
+    <button type="button" id="show_white" class="btn btn-sm btn-outline-primary" title="Show only White's reach">White</button>
+    <button type="button" id="show_black" class="btn btn-sm btn-outline-danger" title="Show only Black's reach">Black</button>
+
+    <p></p>
+    <div id="legend" class="text-muted small">
+        <span style="background: rgb(13,110,253);"></span> White reach
+        &nbsp;&nbsp;
+        <span style="background: rgb(220,53,69);"></span> Black reach
+        &nbsp;&nbsp;
+        <span style="background: linear-gradient(90deg, rgb(13,110,253), rgb(220,53,69));"></span> Contested
+        &nbsp;&nbsp;
+        <span style="background: transparent; box-shadow: inset 0 0 0 3px rgba(255,193,7,0.95);"></span> Capture possible
+    </div>
 
     <p></p>
     <div class="text-muted small">
-        Orange shading shows every square any piece can reach right now,
-        darker where more pieces (or higher-probability moves) converge.
-        Squares outlined in red are reachable by capture. Click a single
-        piece to isolate just its own moves; hover any highlighted
-        square for the exact breakdown.
+        Darker shading means more pieces (or higher-probability moves)
+        converge on that square; the color shows whose pieces can reach
+        it. Click a piece to isolate just its own moves; hover any
+        highlighted square for the exact breakdown.
     </div>
 
     <p></p>

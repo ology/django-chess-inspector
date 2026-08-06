@@ -180,11 +180,12 @@ class Controller:
         """
         For each piece currently on the board, compute a uniform probability
         over that piece's own legal destination squares (1 / that piece's
-        legal-move count). Returns a dict keyed by the piece's current
-        square, each value a dict of
-        {destination_square: {"probability": p, "capture": bool}}.
-        The capture flag lets the frontend paint capture squares
-        differently from quiet-move squares in the heatmap.
+        legal-move count). Returns a dict split by color first:
+        { "white": {origin: {dest: {"probability": p, "capture": bool}}},
+        "black": {...} }
+        Splitting by color (rather than one flat dict) lets the frontend
+        render white's and black's reach as visually distinct heat layers
+        instead of an undifferentiated combined blob.
         """
         if self.fen:
             self.board = chess.Board(self.fen)
@@ -192,16 +193,11 @@ class Controller:
             self.board = chess.Board()
 
         board = self.board
-        probs = {}
+        result = {"white": {}, "black": {}}
 
-        # Group legal moves by origin square, per side-to-move only -
-        # python-chess's legal_moves only yields moves for the side whose
-        # turn it is, so to cover both colors we compute for the current
-        # turn, then flip .turn and recompute for the other side's pieces
-        # (their moves aren't "legal this ply" but this screen is meant to
-        # show potential mobility for both colors, not just whoever is up).
         for color in (chess.WHITE, chess.BLACK):
             board.turn = color
+            color_key = "white" if color == chess.WHITE else "black"
             by_origin = {}
             for move in board.legal_moves:
                 by_origin.setdefault(move.from_square, []).append(move)
@@ -209,7 +205,7 @@ class Controller:
             for origin, moves in by_origin.items():
                 square_name = chess.square_name(origin)
                 n = len(moves)
-                probs[square_name] = {
+                result[color_key][square_name] = {
                     chess.square_name(move.to_square): {
                         "probability": round(1 / n, 4),
                         "capture": board.is_capture(move),
@@ -217,4 +213,4 @@ class Controller:
                     for move in moves
                 }
 
-        return json.dumps(probs, sort_keys=True)
+        return json.dumps(result, sort_keys=True)
