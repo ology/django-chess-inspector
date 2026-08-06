@@ -21,6 +21,10 @@
         outline: 3px solid yellow;
         outline-offset: -3px;
     }
+    .protected-square {
+        outline: 3px solid green;
+        outline-offset: -3px;
+    }
     #legend span {
         display: inline-block;
         width: 14px;
@@ -77,18 +81,18 @@
     }
 
     function clearHighlights() {
-        $('[data-square]').css('background', '').removeClass('capture-square').removeClass('threatened-square').removeAttr('title');
+        $('[data-square]').css('background', '').removeClass('capture-square').removeClass('threatened-square').removeClass('protected-square').removeAttr('title');
     }
 
-    // moveProbs.threatened has the same {origin: [dest, ...]} shape per
-    // color as moveProbs itself - this flattens the dest lists across
-    // whichever side(s) are currently in view into one set of squares to
-    // outline.
-    function threatenedSquaresFor(sides) {
+    // moveProbs.threatened / moveProbs.protected both have the same
+    // {origin: [dest, ...]} shape per color as moveProbs itself - this
+    // flattens the dest lists across whichever side(s) are currently in
+    // view into one set of squares to outline.
+    function squaresFor(byColor, sides) {
         const squares = new Set();
-        const threatened = moveProbs.threatened || {};
+        const data = byColor || {};
         for (const side of sides) {
-            const byOrigin = threatened[side];
+            const byOrigin = data[side];
             if (!byOrigin) continue;
             for (const origin in byOrigin) {
                 byOrigin[origin].forEach(dest => squares.add(dest));
@@ -96,10 +100,28 @@
         }
         return squares;
     }
+    const threatenedSquaresFor = (sides) => squaresFor(moveProbs.threatened, sides);
+    const protectedSquaresFor = (sides) => squaresFor(moveProbs.protected, sides);
 
     function applyThreatenedOutlines(squares) {
         squares.forEach(function(sq) {
             $('*[data-square="' + sq + '"]').addClass('threatened-square');
+        });
+    }
+
+    // Protected destinations never coincide with threatened ones for the
+    // SAME piece's own moves (protected is only computed for the safe
+    // moves that survive the threatened filter), but different pieces of
+    // different colors can disagree about the same square when both
+    // sides are shown at once - so a threatened outline always wins over
+    // a protected one on a given square, rather than the two fighting
+    // over the single outline color.
+    function applyProtectedOutlines(squares) {
+        squares.forEach(function(sq) {
+            const elem = $('*[data-square="' + sq + '"]');
+            if (!elem.hasClass('threatened-square')) {
+                elem.addClass('protected-square');
+            }
         });
     }
 
@@ -138,6 +160,7 @@
             elem.attr('title', cell.contributors.join('\n'));
         }
         applyThreatenedOutlines(threatenedSquaresFor(sides));
+        applyProtectedOutlines(protectedSquaresFor(sides));
     }
 
     // Narrows the view to just one piece's own destinations (color is
@@ -168,6 +191,10 @@
         const threatened = moveProbs.threatened || {};
         const unsafe = (threatened[side] && threatened[side][square]) || [];
         applyThreatenedOutlines(new Set(unsafe));
+
+        const protectedMoves = moveProbs.protected || {};
+        const safe = (protectedMoves[side] && protectedMoves[side][square]) || [];
+        applyProtectedOutlines(new Set(safe));
     }
 
     // Figures out which side (if any) has a piece with legal moves on
@@ -257,13 +284,16 @@
         <span style="background: rgb(13,110,253);"></span> White
         &nbsp;&nbsp;
         <span style="background: rgb(220,53,69);"></span> Black
+        {% if calc == "optimal" %}
+        &nbsp;&nbsp;
+        <span style="background: transparent; outline: 3px solid yellow; outline-offset: -3px;"></span> Threatened
+        &nbsp;&nbsp;
+        <span style="background: transparent; outline: 3px solid green; outline-offset: -3px;"></span> Protected
+        {% else %}
         &nbsp;&nbsp;
         <span style="background: rgb(205, 13, 253);"></span> Contested
         &nbsp;&nbsp;
         <span style="background: transparent; box-shadow: inset 0 0 0 3px rgb(255, 243, 7);"></span> Capture
-        {% if calc == "optimal" %}
-        &nbsp;&nbsp;
-        <span style="background: transparent; outline: 3px solid yellow; outline-offset: -3px;"></span> Threatened
         {% endif %}
     </div>
 

@@ -235,6 +235,12 @@ class Controller:
         # empty for every other calc mode, since the concept only applies
         # to "optimal".
         threatened = {"white": {}, "black": {}}
+        # Same shape again, but for the opposite question: among the
+        # destinations that DID make it into result (i.e. weren't
+        # threatened), which ones does the mover's own side also cover -
+        # so if the piece landing there ever needs recapturing, something
+        # else of ours is already covering that square.
+        protected = {"white": {}, "black": {}}
 
         # "optimal" needs to know, for each candidate destination square,
         # whether the opponent threatens it - that's exactly what
@@ -256,14 +262,19 @@ class Controller:
                 if calc == "optimal":
                     safe_moves = []
                     unsafe_dests = []
+                    protected_dests = []
                     for m in moves:
                         if self._dest_is_threatened(cover, board, m):
                             unsafe_dests.append(chess.square_name(m.to_square))
                         else:
                             safe_moves.append(m)
+                            if self._dest_is_protected(cover, board, m):
+                                protected_dests.append(chess.square_name(m.to_square))
                     moves = safe_moves
                     if unsafe_dests:
                         threatened[color_key][square_name] = unsafe_dests
+                    if protected_dests:
+                        protected[color_key][square_name] = protected_dests
                     n = len(moves)
                     if n == 0:
                         # Every destination for this piece is threatened -
@@ -293,6 +304,7 @@ class Controller:
                 }
 
         result["threatened"] = threatened
+        result["protected"] = protected
         return json.dumps(result, sort_keys=True)
 
     def _dest_is_threatened(self, cover, board, move):
@@ -327,4 +339,41 @@ class Controller:
         if board.is_capture(move) and not board.is_en_passant(move):
             return len(dest_cover.get("is_protected_by", [])) > 0
         return len(dest_cover.get(f"{opponent}_can_capture_here", [])) > 0
-    
+
+    def _dest_is_protected(self, cover, board, move):
+        """
+        True if the mover's own side would still be covering this
+        destination square after the move - i.e. at least one OTHER
+        piece of the mover's color (besides the one making this move)
+        also reaches that square, so it could be recaptured/reinforced
+        if needed.
+
+        This is the same two coverage fields _dest_is_threatened uses,
+        just read for the mover's own color instead of the opponent's:
+
+        - Capture (non-en-passant): the destination is currently
+          occupied by the piece being captured, so its is_threatened_by
+          list - built from the color OPPOSITE whoever occupies the
+          square - already names the mover's own color's attackers on
+          it.
+        - Non-capture (including en passant, whose destination square
+          is empty like an ordinary move): "<mover color>_can_capture_
+          here" on the empty square, same field _dest_is_threatened
+          reads for the opponent's side.
+
+        Either way, the move's own origin square is excluded from the
+        count: a piece can't defend the square it's leaving in order to
+        make this very move, even though it trivially shows up in its
+        own pre-move coverage of that square.
+        """
+        origin = chess.square_name(move.from_square)
+        dest = chess.square_name(move.to_square)
+        dest_cover = cover.get(dest, {})
+        mover_color = board.piece_at(move.from_square).color
+        mover = 'white' if mover_color == chess.WHITE else 'black'
+
+        if board.is_capture(move) and not board.is_en_passant(move):
+            defenders = dest_cover.get("is_threatened_by", [])
+        else:
+            defenders = dest_cover.get(f"{mover}_can_capture_here", [])
+        return any(sq != origin for sq in defenders)
