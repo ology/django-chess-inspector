@@ -211,6 +211,13 @@ class Controller:
         board = self.board
         result = {"white": {}, "black": {}}
 
+        # "optimal" needs to know, for each candidate destination square,
+        # whether the opponent threatens it - that's exactly what
+        # Coverage.cover()'s is_threatened_by list tracks per square.
+        # Static data about the board as it currently sits, so it's
+        # computed once up front rather than per color in the loop below.
+        cover = json.loads(self.get_coverage()) if calc == "optimal" else None
+
         for color in (chess.WHITE, chess.BLACK):
             board.turn = color
             color_key = "white" if color == chess.WHITE else "black"
@@ -220,15 +227,27 @@ class Controller:
 
             for origin, moves in by_origin.items():
                 square_name = chess.square_name(origin)
-                n = len(moves)
 
-                if calc == "weighted":
+                if calc == "optimal":
+                    moves = [m for m in moves if not self._dest_is_threatened(cover, board, m)]
+                    n = len(moves)
+                    if n == 0:
+                        # Every destination for this piece is threatened -
+                        # leave the square out of the result entirely
+                        # rather than dividing by zero, so nothing gets
+                        # colored for it.
+                        continue
+                    per_move = 1 / n
+                elif calc == "weighted":
+                    n = len(moves)
                     piece = board.piece_at(origin)
                     weight = self._PIECE_VALUES.get(piece.piece_type, 1) if piece else 1
                     per_move = weight / n
                 elif calc == "by_moves":
+                    n = len(moves)
                     per_move = n / 64
                 else:
+                    n = len(moves)
                     per_move = 1 / n
 
                 result[color_key][square_name] = {
@@ -240,3 +259,36 @@ class Controller:
                 }
 
         return json.dumps(result, sort_keys=True)
+
+    def _dest_is_threatened(self, cover, board, move):
+        """
+        True if the move's destination square would be under threat from
+        the opponent, per Coverage's cover() data.
+
+        Coverage only populates is_threatened_by/is_protected_by for
+        squares that currently hold a piece (see chess_coverage's own
+        cover() - both fields are set inside an `if piece:` guard), so a
+        non-capture move (landing on an empty square) never has an
+        is_threatened_by entry to check, regardless of whether the
+        square is actually attacked. The field that IS populated for
+        empty squares is "<color>_can_capture_here" - the origin squares
+        of <color>'s pieces that could capture something placed there.
+
+        A capture is different: the destination is currently occupied by
+        the piece being captured, and its is_protected_by list names the
+        opponent's OTHER pieces defending it - i.e. exactly who would be
+        left to recapture once that piece is taken.
+
+        En passant is a capture (board.is_capture is True) but its
+        destination square is empty like a normal move - the captured
+        pawn sits on a different square - so it's checked the same way
+        as a non-capture.
+        """
+        dest = chess.square_name(move.to_square)
+        dest_cover = cover.get(dest, {})
+        mover_color = board.piece_at(move.from_square).color
+        opponent = 'black' if mover_color == chess.WHITE else 'white'
+
+        if board.is_capture(move) and not board.is_en_passant(move):
+            return len(dest_cover.get("is_protected_by", [])) > 0
+        return len(dest_cover.get(f"{opponent}_can_capture_here", [])) > 0

@@ -140,7 +140,7 @@ def probability(request):
     ctrl.load_state()
     fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
     calc = request.GET.get('calc') or 'uniform'
-    if calc not in ('uniform', 'weighted', 'by_moves'):
+    if calc not in ('uniform', 'weighted', 'by_moves', 'optimal'):
         calc = 'uniform'
     ctrl.fen = fen
     move_probs = ctrl.get_move_probabilities(calc=calc)
