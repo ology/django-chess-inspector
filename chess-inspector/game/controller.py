@@ -19,6 +19,17 @@ class Controller:
     en_passant = True
     logger = logging.getLogger('debug')
 
+    # Standard material values, used only for the "weighted" calculation
+    # mode below - not used by "uniform" mode at all.
+    _PIECE_VALUES = {
+        chess.PAWN: 1,
+        chess.KNIGHT: 3,
+        chess.BISHOP: 3,
+        chess.ROOK: 5,
+        chess.QUEEN: 9,
+        chess.KING: 0,  # king mobility isn't material pressure, weight it out
+    }
+
     def __init__(self):
         pass
 
@@ -176,16 +187,21 @@ class Controller:
         self.fen = fens[0]
         return fens
 
-    def get_move_probabilities(self):
+    def get_move_probabilities(self, calc="uniform"):
         """
-        For each piece currently on the board, compute a uniform probability
-        over that piece's own legal destination squares (1 / that piece's
-        legal-move count). Returns a dict split by color first:
+        For each piece currently on the board, compute a probability over
+        that piece's own legal destination squares. Returns a dict split
+        by color first:
         { "white": {origin: {dest: {"probability": p, "capture": bool}}},
         "black": {...} }
-        Splitting by color (rather than one flat dict) lets the frontend
-        render white's and black's reach as visually distinct heat layers
-        instead of an undifferentiated combined blob.
+
+        calc controls how probability mass is distributed:
+        - "uniform" (default): 1 / that piece's legal-move count, so every
+        piece's own moves sum to 1 regardless of what kind of piece it is.
+        - "weighted": piece_value / legal-move count, so a queen's moves
+        collectively carry more weight in an aggregate heatmap than a
+        pawn's - this does NOT sum to 1 per piece by design, since the
+        point is to let higher-value pieces dominate the aggregate.
         """
         if self.fen:
             self.board = chess.Board(self.fen)
@@ -205,9 +221,17 @@ class Controller:
             for origin, moves in by_origin.items():
                 square_name = chess.square_name(origin)
                 n = len(moves)
+
+                if calc == "weighted":
+                    piece = board.piece_at(origin)
+                    weight = self._PIECE_VALUES.get(piece.piece_type, 1) if piece else 1
+                    per_move = weight / n
+                else:
+                    per_move = 1 / n
+
                 result[color_key][square_name] = {
                     chess.square_name(move.to_square): {
-                        "probability": round(1 / n, 4),
+                        "probability": round(per_move, 4),
                         "capture": board.is_capture(move),
                     }
                     for move in moves

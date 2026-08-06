@@ -139,11 +139,15 @@ def fen(request):
 def probability(request):
     ctrl.load_state()
     fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
+    calc = request.GET.get('calc') or 'uniform'
+    if calc not in ('uniform', 'weighted'):
+        calc = 'uniform'
     ctrl.fen = fen
-    move_probs = ctrl.get_move_probabilities()
+    move_probs = ctrl.get_move_probabilities(calc=calc)
     context = {
         "fen": fen,
         "move_probs": move_probs,
+        "calc": calc,
         "init_fen": INIT_FEN,
     }
     return render(request, "game/probability.html", context)

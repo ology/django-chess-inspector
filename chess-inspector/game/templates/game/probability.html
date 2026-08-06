@@ -181,6 +181,18 @@
         $('#show_both').on('click', function() { showAggregateHeatmap(['white', 'black']); });
         $('#show_white').on('click', function() { showAggregateHeatmap(['white']); });
         $('#show_black').on('click', function() { showAggregateHeatmap(['black']); });
+
+        // Changing calculation mode needs a fresh probability set from
+        // the server (it's not something we can just re-blend
+        // client-side), so this reloads the page with the new calc
+        // param, carrying the current fen along so the position doesn't
+        // reset back to whatever ctrl.fen happens to be server-side.
+        $('#calc_select').on('change', function() {
+            const params = new URLSearchParams(window.location.search);
+            params.set('calc', $(this).val());
+            params.set('fen', "{{ fen }}");
+            window.location.search = params.toString();
+        });
     });
   </script>
 </head>
@@ -204,6 +216,11 @@
     <button type="button" id="show_both" class="btn btn-sm btn-primary" title="Show both sides' reach">Both</button>
     <button type="button" id="show_white" class="btn btn-sm btn-outline-primary" title="Show only White's reach">White</button>
     <button type="button" id="show_black" class="btn btn-sm btn-outline-danger" title="Show only Black's reach">Black</button>
+    <p></p>
+    <select id="calc_select" class="form-select form-select-sm d-inline-block" style="width: auto;" title="How probability is calculated">
+        <option value="uniform" {% if calc == "uniform" %}selected{% endif %}>Uniform per piece</option>
+        <option value="weighted" {% if calc == "weighted" %}selected{% endif %}>Weighted by piece value</option>
+    </select>
 
     <p></p>
     <div id="legend" class="text-muted small">
