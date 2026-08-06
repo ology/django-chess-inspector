@@ -216,6 +216,7 @@
     <select id="calc_select" class="form-select form-select-sm d-inline-block" style="width: auto;" title="How probability is calculated">
         <option value="uniform" {% if calc == "uniform" %}selected{% endif %}>Uniform per piece</option>
         <option value="weighted" {% if calc == "weighted" %}selected{% endif %}>Weighted by piece value</option>
+        <option value="by_moves" {% if calc == "by_moves" %}selected{% endif %}>By piece move number</option>
     </select>
 
     <p></p>

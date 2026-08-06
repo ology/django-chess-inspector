@@ -226,6 +226,8 @@ class Controller:
                     piece = board.piece_at(origin)
                     weight = self._PIECE_VALUES.get(piece.piece_type, 1) if piece else 1
                     per_move = weight / n
+                elif calc == "by_moves":
+                    per_move = n / 64
                 else:
                     per_move = 1 / n
 
