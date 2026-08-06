@@ -17,6 +17,10 @@
     .capture-square {
         box-shadow: inset 0 0 0 3px rgb(255, 243, 7);
     }
+    .threatened-square {
+        outline: 3px solid yellow;
+        outline-offset: -3px;
+    }
     #legend span {
         display: inline-block;
         width: 14px;
@@ -73,7 +77,30 @@
     }
 
     function clearHighlights() {
-        $('[data-square]').css('background', '').removeClass('capture-square').removeAttr('title');
+        $('[data-square]').css('background', '').removeClass('capture-square').removeClass('threatened-square').removeAttr('title');
+    }
+
+    // moveProbs.threatened has the same {origin: [dest, ...]} shape per
+    // color as moveProbs itself - this flattens the dest lists across
+    // whichever side(s) are currently in view into one set of squares to
+    // outline.
+    function threatenedSquaresFor(sides) {
+        const squares = new Set();
+        const threatened = moveProbs.threatened || {};
+        for (const side of sides) {
+            const byOrigin = threatened[side];
+            if (!byOrigin) continue;
+            for (const origin in byOrigin) {
+                byOrigin[origin].forEach(dest => squares.add(dest));
+            }
+        }
+        return squares;
+    }
+
+    function applyThreatenedOutlines(squares) {
+        squares.forEach(function(sq) {
+            $('*[data-square="' + sq + '"]').addClass('threatened-square');
+        });
     }
 
     // sides: array containing 'white', 'black', or both - controls which
@@ -110,6 +137,7 @@
             }
             elem.attr('title', cell.contributors.join('\n'));
         }
+        applyThreatenedOutlines(threatenedSquaresFor(sides));
     }
 
     // Narrows the view to just one piece's own destinations (color is
@@ -136,6 +164,10 @@
             elem.attr('title', `${side} ${square}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`);
         }
         $('*[data-square="' + square + '"]').css('background', 'lightgreen');
+
+        const threatened = moveProbs.threatened || {};
+        const unsafe = (threatened[side] && threatened[side][square]) || [];
+        applyThreatenedOutlines(new Set(unsafe));
     }
 
     // Figures out which side (if any) has a piece with legal moves on
@@ -229,6 +261,10 @@
         <span style="background: rgb(205, 13, 253);"></span> Contested
         &nbsp;&nbsp;
         <span style="background: transparent; box-shadow: inset 0 0 0 3px rgb(255, 243, 7);"></span> Capture
+        {% if calc == "optimal" %}
+        &nbsp;&nbsp;
+        <span style="background: transparent; outline: 3px solid yellow; outline-offset: -3px;"></span> Threatened
+        {% endif %}
     </div>
 
     <p></p>

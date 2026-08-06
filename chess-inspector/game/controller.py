@@ -228,6 +228,13 @@ class Controller:
 
         board = self.board
         result = {"white": {}, "black": {}}
+        # Squares excluded from "optimal" mode because _dest_is_threatened
+        # flagged them - kept around (rather than just dropped) so the
+        # frontend can outline them, mirroring the same
+        # {color: {origin: [dest, ...]}} shape as result itself. Left
+        # empty for every other calc mode, since the concept only applies
+        # to "optimal".
+        threatened = {"white": {}, "black": {}}
 
         # "optimal" needs to know, for each candidate destination square,
         # whether the opponent threatens it - that's exactly what
@@ -247,7 +254,16 @@ class Controller:
                 square_name = chess.square_name(origin)
 
                 if calc == "optimal":
-                    moves = [m for m in moves if not self._dest_is_threatened(cover, board, m)]
+                    safe_moves = []
+                    unsafe_dests = []
+                    for m in moves:
+                        if self._dest_is_threatened(cover, board, m):
+                            unsafe_dests.append(chess.square_name(m.to_square))
+                        else:
+                            safe_moves.append(m)
+                    moves = safe_moves
+                    if unsafe_dests:
+                        threatened[color_key][square_name] = unsafe_dests
                     n = len(moves)
                     if n == 0:
                         # Every destination for this piece is threatened -
@@ -276,6 +292,7 @@ class Controller:
                     for move in moves
                 }
 
+        result["threatened"] = threatened
         return json.dumps(result, sort_keys=True)
 
     def _dest_is_threatened(self, cover, board, move):
