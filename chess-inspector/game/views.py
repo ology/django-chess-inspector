@@ -49,7 +49,61 @@ def _most_recent_or_new_game_id(account_id=None):
     return Game.objects.create(account_id=account_id or 0).id
 
 def _game_exists(game_id):
+    # Game 0 is the freeform scratch board - see index()/pgn()/fen()/
+    # clear_pgn()/delete_game() below. It's never a real row in the
+    # table; it "exists" by definition so every route that gates on
+    # _game_exists() treats it as always available.
+    if game_id == 0:
+        return True
     return Game.objects.filter(id=game_id).exists()
+
+# Game 0's state - including PGN/FEN uploads - lives in the user's own
+# session instead of the database. That's what makes it work despite
+# pgn()/fen()/clear_pgn() all redirecting after they act (a redirect
+# means a fresh GET follows immediately, which would lose anything that
+# wasn't persisted somewhere): the session is available on that
+# following GET the same way it was on the POST, so the upload survives
+# the redirect - it just never becomes a permanent, shared Game row, and
+# is private to whoever's session it's in.
+_FREEFORM_SESSION_KEY = 'freeform_game'
+
+def _load_freeform_state(request):
+    saved = request.session.get(_FREEFORM_SESSION_KEY, {})
+    ctrl.game_id = 0
+    ctrl.fen = saved.get('fen', '')
+    ctrl.last_fen = saved.get('last_fen', '')
+    ctrl.pgn_filename = saved.get('pgn_filename', '')
+    ctrl.pgn_date = saved.get('pgn_date', '')
+    ctrl.pgn_site = saved.get('pgn_site', '')
+    ctrl.pgn_white = saved.get('pgn_white', '')
+    ctrl.pgn_black = saved.get('pgn_black', '')
+    ctrl.fens = saved.get('fens', [])
+
+def _save_freeform_state(request):
+    request.session[_FREEFORM_SESSION_KEY] = {
+        'fen': ctrl.fen,
+        'last_fen': ctrl.last_fen,
+        'pgn_filename': ctrl.pgn_filename,
+        'pgn_date': ctrl.pgn_date,
+        'pgn_site': ctrl.pgn_site,
+        'pgn_white': ctrl.pgn_white,
+        'pgn_black': ctrl.pgn_black,
+        'fens': ctrl.fens,
+    }
+
+def _load_state(request, game_id):
+    """Dispatches to session-backed or DB-backed state loading."""
+    if game_id == 0:
+        _load_freeform_state(request)
+    else:
+        ctrl.load_state(game_id)
+
+def _save_state(request, game_id):
+    """Dispatches to session-backed or DB-backed state saving."""
+    if game_id == 0:
+        _save_freeform_state(request)
+    else:
+        ctrl.save_state(game_id=game_id, account_id=request.user.id)
 
 def login_page(request):
     if request.method == "POST":
@@ -85,14 +139,14 @@ def index(request, game_id=None):
 
     is_cover = False
     play_n = 0
-    # Resync from the DB before anything else, on every request - not
-    # just GET. This makes pgn_filename/pgn_date/pgn_site/pgn_white/
-    # pgn_black/fens (and fen/last_fen) consistent no matter which worker
-    # process ends up handling this request versus whichever one handled
-    # the upload or the last move - and, now that ctrl serves whichever
-    # game_id each request asks for, it's also what loads the RIGHT
-    # game's state rather than whatever the previous request left behind.
-    ctrl.load_state(game_id)
+    # Resync from persisted state before anything else, on every request
+    # - not just GET. For a real game this makes pgn_filename/pgn_date/
+    # pgn_site/pgn_white/pgn_black/fens (and fen/last_fen) consistent no
+    # matter which worker process ends up handling this request versus
+    # whichever one handled the upload or the last move. For game 0 (the
+    # freeform board) it loads from the session instead of the database -
+    # see _load_state().
+    _load_state(request, game_id)
     if request.method == "POST":
         posted_fen = request.POST.get('fen')
         if not _valid_fen(posted_fen):
@@ -105,7 +159,7 @@ def index(request, game_id=None):
         ctrl.en_passant = _to_bool(request.POST.get('en_passant'), default=ctrl.en_passant)
         is_cover = request.POST.get('is_cover')
         play_n = request.POST.get('play_n') or 0
-        ctrl.save_state(game_id=game_id, account_id=request.user.id)
+        _save_state(request, game_id)
     else:
         last_fen = request.GET.get('last_fen') or ctrl.last_fen or INIT_FEN
         fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
@@ -155,6 +209,9 @@ def new_game(request):
 def delete_game(request, game_id):
     if request.method != "POST":
         return redirect("game:index", game_id=game_id)
+    if game_id == 0:
+        messages.error(request, "Game 0 is the freeform board - it can't be deleted")
+        return redirect("game:index", game_id=0)
     if not _game_exists(game_id):
         messages.error(request, "That game doesn't exist anymore")
         return redirect("game:index")
@@ -177,10 +234,10 @@ def pgn(request, game_id):
         if not uploaded:
             messages.error(request, "No PGN file was selected")
             return redirect("game:index", game_id=game_id)
-        ctrl.load_state(game_id)
+        _load_state(request, game_id)
         ctrl.pgn_file = uploaded
         ctrl.pgn()
-        ctrl.save_state(game_id=game_id, account_id=request.user.id)
+        _save_state(request, game_id)
         return redirect("game:index", game_id=game_id)
     return redirect("game:index", game_id=game_id)
 
@@ -189,7 +246,7 @@ def clear_pgn(request, game_id):
     if not _game_exists(game_id):
         messages.error(request, "That game doesn't exist anymore")
         return redirect("game:index")
-    ctrl.load_state(game_id)
+    _load_state(request, game_id)
     if request.method == "POST":
         ctrl.fen = request.POST.get('fen')
     ctrl.pgn_file = ""
@@ -199,7 +256,7 @@ def clear_pgn(request, game_id):
     ctrl.pgn_white = ""
     ctrl.pgn_black = ""
     ctrl.fens = []
-    ctrl.save_state(game_id=game_id, account_id=request.user.id)
+    _save_state(request, game_id)
     return redirect("game:index", game_id=game_id)
 
 @login_required
@@ -207,7 +264,7 @@ def fen(request, game_id):
     if not _game_exists(game_id):
         messages.error(request, "That game doesn't exist anymore")
         return redirect("game:index")
-    ctrl.load_state(game_id)
+    _load_state(request, game_id)
     if request.method == "POST":
         candidate = request.POST.get('show_fen')
         if not _valid_fen(candidate):
@@ -231,7 +288,7 @@ def fen(request, game_id):
         ctrl.pgn_white = ""
         ctrl.pgn_black = ""
         ctrl.fens = []
-        ctrl.save_state(game_id=game_id, account_id=request.user.id)
+        _save_state(request, game_id)
     return redirect("game:index", game_id=game_id)
 
 @login_required
@@ -239,7 +296,7 @@ def probability(request, game_id):
     if not _game_exists(game_id):
         messages.error(request, "That game doesn't exist anymore")
         return redirect("game:index")
-    ctrl.load_state(game_id)
+    _load_state(request, game_id)
     fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
     calc = request.GET.get('calc') or 'uniform'
     if calc not in ('uniform', 'weighted', 'by_moves', 'optimal'):

@@ -280,7 +280,7 @@
     <div id="myBoard" class="myBoard" style="width: 400px"></div>
     <p></p>
 
-    <a href="{% url 'game:index' %}" class="btn btn-sm btn-success" title="Back to the main board">&lt; Return</a>
+    <a href="{% url 'game:index' game_id %}" class="btn btn-sm btn-success" title="Back to the main board">&lt; Return</a>
     <button type="button" id="show_both" class="btn btn-sm btn-primary" title="Show both sides' reach">Both</button>
     <button type="button" id="show_white" class="btn btn-sm btn-outline-primary" title="Show only White's reach">White</button>
     <button type="button" id="show_black" class="btn btn-sm btn-outline-danger" title="Show only Black's reach">Black</button>

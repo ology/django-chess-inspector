@@ -403,6 +403,7 @@
     <h2><a href="/">Chessboard Visualization</a></h2>
 
     <select id="game_selector" class="form-select form-select-sm d-inline-block" style="width: auto;" title="Switch to a different game">
+        <option value="0" data-url="{% url 'game:index' 0 %}" {% if game_id == 0 %}selected{% endif %}>Freeform (unsaved)</option>
         {% for g in games %}
         <option value="{{ g.id }}" data-url="{% url 'game:index' g.id %}" {% if g.id == game_id %}selected{% endif %}>
             Game #{{ g.id }}{% if g.pgn_white or g.pgn_black %} — {{ g.pgn_white|default:"?" }} vs {{ g.pgn_black|default:"?" }}{% endif %} ({{ g.updated|date:"M j, H:i" }})
@@ -413,10 +414,12 @@
         {% csrf_token %}
         <button type="submit" class="btn btn-sm btn-outline-primary" title="Start a brand new game">New</button>
     </form>
+    {% if game_id != 0 %}
     <form action="{% url 'game:delete_game' game_id %}" method="post" style="display: inline-block;" id="delete_game_form">
         {% csrf_token %}
         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete the currently selected game">Delete</button>
     </form>
+    {% endif %}
     <p></p>
 
     <div id="myBoard" class="myBoard" style="width: 400px"></div>
