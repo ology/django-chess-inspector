@@ -5,8 +5,8 @@ import json
 class ChatConsumer(WebsocketConsumer):
 
     def connect(self):
-        # One room per game now, instead of a single hardcoded 'test'
-        # room shared by every connected client regardless of which game
+        # One room per game, instead of a single hardcoded 'test' room
+        # shared by every connected client regardless of which game
         # they're actually looking at. game_id comes straight from the
         # URL (see routing.py) - the frontend connects to
         # ws/socket-server/<game_id>/ using whichever game is currently
@@ -39,4 +39,3 @@ class ChatConsumer(WebsocketConsumer):
             'type': 'chat',
             'message': message,
         }))
-        
