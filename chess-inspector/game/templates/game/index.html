@@ -411,11 +411,11 @@
     </select>
     <form action="{% url 'game:new_game' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-primary" title="Start a brand new game">New Game</button>
+        <button type="submit" class="btn btn-sm btn-outline-primary" title="Start a brand new game">New</button>
     </form>
     <form action="{% url 'game:delete_game' game_id %}" method="post" style="display: inline-block;" id="delete_game_form">
         {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete the currently selected game">Delete Game</button>
+        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete the currently selected game">Delete</button>
     </form>
     <p></p>
 
@@ -458,10 +458,10 @@
         {% if not pgn_file %}
     &nbsp;
     <input type="checkbox" name="legal" id="legal" title="Do not allow moving pieces offboard">
-    <label for="legal">No off-board moves</label>
+    <label for="legal">No off-board</label>
         {% endif %}
     <p></p>
-    <a href="{% url 'game:probability' game_id %}" class="btn btn-sm btn-outline-dark">Probabilities</a>
+    <a href="{% url 'game:probability' game_id %}" class="btn btn-sm btn-outline-success">Probabilities</a>
     <p></p>
     <button type="button" id="clear_board" class="btn btn-sm btn-secondary" title="Clear the board of all pieces">Clear board</button>
     <select id="piece_selector" class="form-select form-select-sm" style="width: auto; display: inline-block;" title="Select a piece, then click an empty square to place it there">
