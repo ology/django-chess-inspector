@@ -25,6 +25,23 @@
         outline: 3px solid green;
         outline-offset: -3px;
     }
+    /* outline is a single CSS property, so a plain .threatened-square
+       plus .protected-square combo can't show two different outline
+       colors at once - whichever rule comes later in the cascade would
+       just win outright and hide the other. When both classes land on
+       the same square, this higher-specificity combined selector keeps
+       the yellow outline at the edge and moves green to an inset
+       box-shadow ring instead, so both are visible: yellow outer,
+       green nested inside it. This does share the box-shadow property
+       with .capture-square, so in the rare case a square is
+       simultaneously a safe capture AND threatened-for-another-piece
+       AND protected, only one of the two box-shadow rings would show -
+       an acceptable trade-off given how narrow that overlap is. */
+    .protected-square.threatened-square {
+        outline: 3px solid yellow;
+        outline-offset: -3px;
+        box-shadow: inset 0 0 0 8px green;
+    }
     #legend span {
         display: inline-block;
         width: 14px;
@@ -103,25 +120,21 @@
     const threatenedSquaresFor = (sides) => squaresFor(moveProbs.threatened, sides);
     const protectedSquaresFor = (sides) => squaresFor(moveProbs.protected, sides);
 
+    // moveProbs.threatened and moveProbs.protected are independent sets -
+    // a square can genuinely be both at once when different pieces (or
+    // different colors, in the aggregate view) disagree about it. Both
+    // classes are always applied when applicable; the CSS combined
+    // selector (.protected-square.threatened-square) handles making both
+    // visible together rather than one hiding the other.
     function applyThreatenedOutlines(squares) {
         squares.forEach(function(sq) {
             $('*[data-square="' + sq + '"]').addClass('threatened-square');
         });
     }
 
-    // Protected destinations never coincide with threatened ones for the
-    // SAME piece's own moves (protected is only computed for the safe
-    // moves that survive the threatened filter), but different pieces of
-    // different colors can disagree about the same square when both
-    // sides are shown at once - so a threatened outline always wins over
-    // a protected one on a given square, rather than the two fighting
-    // over the single outline color.
     function applyProtectedOutlines(squares) {
         squares.forEach(function(sq) {
-            const elem = $('*[data-square="' + sq + '"]');
-            if (!elem.hasClass('threatened-square')) {
-                elem.addClass('protected-square');
-            }
+            $('*[data-square="' + sq + '"]').addClass('protected-square');
         });
     }
 
@@ -288,7 +301,7 @@
         &nbsp;&nbsp;
         <span style="background: transparent; outline: 3px solid yellow; outline-offset: -3px;"></span> Threatened
         &nbsp;&nbsp;
-        <span style="background: transparent; outline: 3px solid green; outline-offset: -3px;"></span> Protected
+        <span style="background: transparent; outline: 6px solid green; outline-offset: -3px;"></span> Protected
         {% else %}
         &nbsp;&nbsp;
         <span style="background: rgb(205, 13, 253);"></span> Contested
