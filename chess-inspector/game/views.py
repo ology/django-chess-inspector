@@ -3,11 +3,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
-from django.shortcuts import redirect, render, reverse
+from django.shortcuts import redirect, render
 import json
 
 from .controller import Controller
+from .models import Game
 
 ctrl = Controller()
 
@@ -36,6 +36,21 @@ def _to_bool(value, default):
         return value
     return str(value).strip().lower() in ('true', '1', 'on', 'yes')
 
+def _most_recent_or_new_game_id(account_id=None):
+    """
+    Finds the most recently updated game in the shared lobby, or creates
+    a brand new one if none exist yet. Used whenever a route needs
+    somewhere sensible to land without a specific game_id in hand (the
+    bare index route, or recovering from a stale/bad game_id in a URL).
+    """
+    most_recent = Game.objects.order_by('-updated').first()
+    if most_recent:
+        return most_recent.id
+    return Game.objects.create(account_id=account_id or 0).id
+
+def _game_exists(game_id):
+    return Game.objects.filter(id=game_id).exists()
+
 def login_page(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -54,20 +69,35 @@ def login_page(request):
     return render(request, 'login.html')
 
 @login_required
-def index(request):
+def index(request, game_id=None):
+    # No game specified (bare "/") - land on the most recently active
+    # game in the shared lobby, or start a fresh one if the lobby is
+    # empty. Redirecting (rather than rendering here directly) means the
+    # address bar - and therefore the per-game WebSocket room this page
+    # connects to - always reflects exactly which game is being viewed,
+    # so a bookmarked or shared link to a specific game is meaningful.
+    if game_id is None:
+        return redirect("game:index", game_id=_most_recent_or_new_game_id(account_id=request.user.id))
+
+    if not _game_exists(game_id):
+        messages.error(request, "That game doesn't exist anymore - showing the most recent one instead")
+        return redirect("game:index", game_id=_most_recent_or_new_game_id(account_id=request.user.id))
+
     is_cover = False
     play_n = 0
-    # Resync from the DB before anything else, on every request - not just
-    # GET. This is what makes pgn_filename/pgn_date/pgn_site/pgn_white/
+    # Resync from the DB before anything else, on every request - not
+    # just GET. This makes pgn_filename/pgn_date/pgn_site/pgn_white/
     # pgn_black/fens (and fen/last_fen) consistent no matter which worker
     # process ends up handling this request versus whichever one handled
-    # the upload or the last move.
-    ctrl.load_state()
+    # the upload or the last move - and, now that ctrl serves whichever
+    # game_id each request asks for, it's also what loads the RIGHT
+    # game's state rather than whatever the previous request left behind.
+    ctrl.load_state(game_id)
     if request.method == "POST":
         posted_fen = request.POST.get('fen')
         if not _valid_fen(posted_fen):
             messages.error(request, "That position couldn't be read - ignoring it")
-            return redirect("game:index")
+            return redirect("game:index", game_id=game_id)
         ctrl.last_fen = request.POST.get('last_fen')
         last_fen = ctrl.last_fen
         ctrl.fen = posted_fen
@@ -75,7 +105,7 @@ def index(request):
         ctrl.en_passant = _to_bool(request.POST.get('en_passant'), default=ctrl.en_passant)
         is_cover = request.POST.get('is_cover')
         play_n = request.POST.get('play_n') or 0
-        ctrl.save_state(account_id=request.user.id)
+        ctrl.save_state(game_id=game_id, account_id=request.user.id)
     else:
         last_fen = request.GET.get('last_fen') or ctrl.last_fen or INIT_FEN
         fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
@@ -86,6 +116,10 @@ def index(request):
     coverage = ctrl.get_coverage()
     coverage = json.dumps(coverage)
     context = {
+        "game_id": game_id,
+        # Powers the game-switcher dropdown - every game in the shared
+        # lobby, most recently active first.
+        "games": Game.objects.order_by('-updated'),
         "last_fen": last_fen,
         "fen": fen,
         "coverage": coverage,
@@ -110,20 +144,36 @@ def index(request):
     return render(request, "game/index.html", context)
 
 @login_required
-def pgn(request):
+def new_game(request):
+    if request.method != "POST":
+        return redirect("game:index")
+    game = Game.objects.create(account_id=request.user.id)
+    messages.success(request, f"Started new game #{game.id}")
+    return redirect("game:index", game_id=game.id)
+
+@login_required
+def pgn(request, game_id):
+    if not _game_exists(game_id):
+        messages.error(request, "That game doesn't exist anymore")
+        return redirect("game:index")
     if request.method == "POST":
         uploaded = request.FILES.get('pgn')
         if not uploaded:
             messages.error(request, "No PGN file was selected")
-            return redirect("game:index")
+            return redirect("game:index", game_id=game_id)
+        ctrl.load_state(game_id)
         ctrl.pgn_file = uploaded
         ctrl.pgn()
-        ctrl.save_state(account_id=request.user.id)
-        return redirect("game:index")
-    return redirect("game:index")
+        ctrl.save_state(game_id=game_id, account_id=request.user.id)
+        return redirect("game:index", game_id=game_id)
+    return redirect("game:index", game_id=game_id)
 
 @login_required
-def clear_pgn(request):
+def clear_pgn(request, game_id):
+    if not _game_exists(game_id):
+        messages.error(request, "That game doesn't exist anymore")
+        return redirect("game:index")
+    ctrl.load_state(game_id)
     if request.method == "POST":
         ctrl.fen = request.POST.get('fen')
     ctrl.pgn_file = ""
@@ -133,30 +183,47 @@ def clear_pgn(request):
     ctrl.pgn_white = ""
     ctrl.pgn_black = ""
     ctrl.fens = []
-    ctrl.save_state(account_id=request.user.id)
-    return redirect("game:index")
+    ctrl.save_state(game_id=game_id, account_id=request.user.id)
+    return redirect("game:index", game_id=game_id)
 
 @login_required
-def fen(request):
+def fen(request, game_id):
+    if not _game_exists(game_id):
+        messages.error(request, "That game doesn't exist anymore")
+        return redirect("game:index")
+    ctrl.load_state(game_id)
     if request.method == "POST":
         candidate = request.POST.get('show_fen')
         if not _valid_fen(candidate):
             messages.error(request, "That FEN doesn't look valid")
-            return redirect("game:index")
+            return redirect("game:index", game_id=game_id)
+        # This view previously only ever set ctrl.fen in memory and built
+        # a "fens" cookie by hand - it never actually called save_state(),
+        # so an uploaded FEN was never really persisted (it just happened
+        # to render once via the cookie/last_fen query param combo before
+        # silently reverting on the next real load). Bringing it in line
+        # with the rest of the app: persist it properly, and treat a
+        # manually-entered FEN as clearing any in-progress PGN playback,
+        # same as the explicit "Clear PGN" action does, since a hand-typed
+        # position isn't part of that PGN's move sequence anymore.
         ctrl.fen = candidate
-        fens = [ctrl.fen]
-        url = reverse('game:index')
-        url += f"?last_fen={ctrl.fen}"
-        response = HttpResponseRedirect(url)
-        response.set_cookie("fens", json.dumps(fens))
-    else:
-        response = redirect("game:index")
-    ctrl.pgn_file = ""
-    return response
+        ctrl.last_fen = candidate
+        ctrl.pgn_file = ""
+        ctrl.pgn_filename = ""
+        ctrl.pgn_date = ""
+        ctrl.pgn_site = ""
+        ctrl.pgn_white = ""
+        ctrl.pgn_black = ""
+        ctrl.fens = []
+        ctrl.save_state(game_id=game_id, account_id=request.user.id)
+    return redirect("game:index", game_id=game_id)
 
 @login_required
-def probability(request):
-    ctrl.load_state()
+def probability(request, game_id):
+    if not _game_exists(game_id):
+        messages.error(request, "That game doesn't exist anymore")
+        return redirect("game:index")
+    ctrl.load_state(game_id)
     fen = request.GET.get('fen') or ctrl.fen or INIT_FEN
     calc = request.GET.get('calc') or 'uniform'
     if calc not in ('uniform', 'weighted', 'by_moves', 'optimal'):
@@ -164,6 +231,7 @@ def probability(request):
     ctrl.fen = fen
     move_probs = ctrl.get_move_probabilities(calc=calc)
     context = {
+        "game_id": game_id,
         "fen": fen,
         "move_probs": move_probs,
         "calc": calc,

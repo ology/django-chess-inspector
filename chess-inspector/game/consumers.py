@@ -5,7 +5,14 @@ import json
 class ChatConsumer(WebsocketConsumer):
 
     def connect(self):
-        self.room_group_name = 'test'
+        # One room per game now, instead of a single hardcoded 'test'
+        # room shared by every connected client regardless of which game
+        # they're actually looking at. game_id comes straight from the
+        # URL (see routing.py) - the frontend connects to
+        # ws/socket-server/<game_id>/ using whichever game is currently
+        # on screen.
+        self.game_id = self.scope['url_route']['kwargs']['game_id']
+        self.room_group_name = f'game_{self.game_id}'
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
@@ -32,3 +39,4 @@ class ChatConsumer(WebsocketConsumer):
             'type': 'chat',
             'message': message,
         }))
+        

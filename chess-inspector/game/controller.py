@@ -33,20 +33,33 @@ class Controller:
     def __init__(self):
         self.pgn_filename = ''
         self.fens = []
+        # Which Game row this controller's state currently reflects.
+        # Every request explicitly calls load_state(game_id) before doing
+        # anything else, so this only exists as a convenience default for
+        # save_state() when the caller already knows which game it's
+        # working with and doesn't want to repeat the id.
+        self.game_id = None
 
-    def save_state(self, account_id=None):
+    def save_state(self, game_id=None, account_id=None):
         """
-        Persists the shared game's current position to a single row
-        (id=1) in the Game table - there's only ever one shared game in
-        this app, so this updates that one row rather than accumulating
-        a new row per move. account_id is stored for informational
-        purposes only (who moved most recently); it doesn't scope which
-        game this is, since the game itself is shared, not per-account.
+        Persists this controller's current position to the Game row
+        identified by game_id (falling back to self.game_id, which
+        load_state() sets). Each row is its own independent game now -
+        this app used to have exactly one shared row (id=1), but with
+        multiple concurrent games that's no longer true, so a game_id is
+        required one way or another. account_id is stored for
+        informational purposes only (who moved most recently in this
+        specific game); it doesn't scope which game this is, since any
+        logged-in user can view or play any game in the shared lobby.
         """
+        game_id = game_id if game_id is not None else self.game_id
+        if game_id is None:
+            self.logger.error("Could not persist game state: no game_id given")
+            return
         try:
             from .models import Game
             saved, _ = Game.objects.get_or_create(
-                id=1, defaults={'account_id': account_id or 0}
+                id=game_id, defaults={'account_id': account_id or 0}
             )
             if account_id is not None:
                 saved.account_id = account_id
@@ -59,20 +72,37 @@ class Controller:
             saved.pgn_black = self.pgn_black
             saved.fens = self.fens
             saved.save()
+            self.game_id = saved.id
         except Exception as e:
             self.logger.error(f"Could not persist game state: {e}")
 
-    def load_state(self):
+    def load_state(self, game_id):
         """
-        Restores the shared game's last-saved position. Broadly
-        try/except'd on purpose: this gets called from GameConfig.ready()
-        at process startup, which on a brand new install runs BEFORE
-        `manage.py migrate` has created the table at all - this must not
-        raise in that case, just leave fen/last_fen at their defaults.
+        Restores the position for the given game_id - required, since
+        there's no longer a single default game to fall back to. Broadly
+        try/except'd on purpose: this can run before `manage.py migrate`
+        has created the table at all on a brand new install, and that
+        must not raise, just leave fen/last_fen at their defaults.
+
+        If game_id doesn't correspond to any row (e.g. a stale/bad link,
+        or the very first request for a brand new id), this resets to
+        defaults rather than silently keeping whatever the previous
+        load_state() call left behind - otherwise switching from an
+        existing game to a nonexistent one would incorrectly keep
+        showing the old game's position.
         """
+        self.game_id = game_id
+        self.fen = ''
+        self.last_fen = ''
+        self.pgn_filename = ''
+        self.pgn_date = ''
+        self.pgn_site = ''
+        self.pgn_white = ''
+        self.pgn_black = ''
+        self.fens = []
         try:
             from .models import Game
-            saved = Game.objects.filter(id=1).first()
+            saved = Game.objects.filter(id=game_id).first()
             if saved:
                 self.fen = saved.fen
                 self.last_fen = saved.last_fen
