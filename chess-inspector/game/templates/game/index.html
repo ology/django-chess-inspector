@@ -138,6 +138,13 @@
                 window.location.href = $(this).find(':selected').data('url');
             });
 
+            $('#delete_game_form').on('submit', function(e) {
+                const label = $('#game_selector option:selected').text().trim();
+                if (!confirm(`Delete ${label}? This can't be undone.`)) {
+                    e.preventDefault();
+                }
+            });
+
             let board;
             let url = `ws://${window.location.host}/ws/socket-server/{{ game_id }}/`;
             const chatSocket = new WebSocket(url);
@@ -405,6 +412,10 @@
     <form action="{% url 'game:new_game' %}" method="post" style="display: inline-block;">
         {% csrf_token %}
         <button type="submit" class="btn btn-sm btn-outline-primary" title="Start a brand new game">New Game</button>
+    </form>
+    <form action="{% url 'game:delete_game' game_id %}" method="post" style="display: inline-block;" id="delete_game_form">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete the currently selected game">Delete Game</button>
     </form>
     <p></p>
 

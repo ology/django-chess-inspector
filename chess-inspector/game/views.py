@@ -152,6 +152,22 @@ def new_game(request):
     return redirect("game:index", game_id=game.id)
 
 @login_required
+def delete_game(request, game_id):
+    if request.method != "POST":
+        return redirect("game:index", game_id=game_id)
+    if not _game_exists(game_id):
+        messages.error(request, "That game doesn't exist anymore")
+        return redirect("game:index")
+    Game.objects.filter(id=game_id).delete()
+    messages.success(request, f"Deleted game #{game_id}")
+    # Land somewhere sensible now that this game is gone - the most
+    # recently active REMAINING game, or a fresh one if that was the
+    # last game in the lobby. This runs after the delete, so
+    # _most_recent_or_new_game_id() can't just hand back the game we
+    # were on a moment ago.
+    return redirect("game:index", game_id=_most_recent_or_new_game_id(account_id=request.user.id))
+
+@login_required
 def pgn(request, game_id):
     if not _game_exists(game_id):
         messages.error(request, "That game doesn't exist anymore")

@@ -16,5 +16,6 @@ urlpatterns = [
     path("<int:game_id>/pgn/", views.pgn, name="pgn"),
     path("<int:game_id>/fen/", views.fen, name="fen"),
     path("<int:game_id>/clear/", views.clear_pgn, name="clear"),
+    path("<int:game_id>/delete/", views.delete_game, name="delete_game"),
     path("login/", views.login_page, name="login_page"),
 ]
