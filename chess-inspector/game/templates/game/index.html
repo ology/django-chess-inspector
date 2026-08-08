@@ -464,7 +464,7 @@
     <label for="legal">No off-board moves</label>
         {% endif %}
     <p></p>
-    <a href="{% url 'game:probability' game_id %}" class="btn btn-sm btn-outline-success">Probabilities</a>
+    <a href="{% url 'game:probability' game_id %}?play_n={{ play_n }}" class="btn btn-sm btn-outline-success">Probabilities</a>
     <p></p>
     <button type="button" id="clear_board" class="btn btn-sm btn-secondary" title="Clear the board of all pieces">Clear board</button>
     <select id="piece_selector" class="form-select form-select-sm" style="width: auto; display: inline-block;" title="Select a piece, then click an empty square to place it there">

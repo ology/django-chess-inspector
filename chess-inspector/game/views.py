@@ -301,6 +301,14 @@ def probability(request, game_id):
     calc = request.GET.get('calc') or 'uniform'
     if calc not in ('uniform', 'weighted', 'by_moves', 'optimal'):
         calc = 'uniform'
+    # play_n (which move of an uploaded PGN is currently on screen) has
+    # nowhere to persist server-side - it's not part of Controller/Game
+    # state, just a page-local counter the index page tracks in JS and
+    # resubmits on every play_forward/backward/end click. So it only
+    # survives a trip to this page and back if we thread it through the
+    # querystring here and hand it back out to the template, which is
+    # what the Return link below now does.
+    play_n = request.GET.get('play_n') or 0
     ctrl.fen = fen
     move_probs = ctrl.get_move_probabilities(calc=calc)
     context = {
@@ -308,6 +316,7 @@ def probability(request, game_id):
         "fen": fen,
         "move_probs": move_probs,
         "calc": calc,
+        "play_n": play_n,
         "init_fen": INIT_FEN,
     }
     return render(request, "game/probability.html", context)
