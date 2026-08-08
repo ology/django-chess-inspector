@@ -42,6 +42,19 @@
         outline-offset: -3px;
         box-shadow: inset 0 0 0 8px green;
     }
+    /* .capture-square's ring is a box-shadow sitting in the same 0-3px
+       band as .threatened-square's / .protected-square's outline
+       (outline-offset: -3px pulls it in to match). Outlines always
+       paint after box-shadows, so on a square that's both a capture
+       AND threatened-and/or-protected, the outline color was silently
+       covering up the capture ring entirely - the data was right (the
+       move really is a capture), it just never rendered. Nesting the
+       capture ring inward to 8px, same idea as the protected+threatened
+       rule above, puts it inside the outline instead of underneath it. */
+    .capture-square.threatened-square,
+    .capture-square.protected-square {
+        box-shadow: inset 0 0 0 8px rgb(0, 200, 255);
+    }
     #legend span {
         display: inline-block;
         width: 14px;
