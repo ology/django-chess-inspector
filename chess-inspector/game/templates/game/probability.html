@@ -55,6 +55,20 @@
     .capture-square.protected-square {
         box-shadow: inset 0 0 0 8px rgb(0, 200, 255);
     }
+    /* "optimal" calc mode gets its own, separate scheme below: flat
+       reach coloring instead of the probability-weighted blend above.
+       Every destination shown here is already a confirmed-safe move
+       (unsafe ones are filtered out server-side), so there's nothing
+       to weight by likelihood - a square just is or isn't reachable. */
+    .dest-white-square {
+        background-color: #cfe2ff;
+    }
+    .dest-black-square {
+        background-color: #f8d7da;
+    }
+    .dest-both-square {
+        background: linear-gradient(135deg, #cfe2ff 50%, #f8d7da 50%);
+    }
     #legend span {
         display: inline-block;
         width: 14px;
@@ -111,7 +125,15 @@
     }
 
     function clearHighlights() {
-        $('[data-square]').css('background', '').removeClass('capture-square').removeClass('threatened-square').removeClass('protected-square').removeAttr('title');
+        $('[data-square]')
+            .css('background', '')
+            .removeClass('capture-square')
+            .removeClass('threatened-square')
+            .removeClass('protected-square')
+            .removeClass('dest-white-square')
+            .removeClass('dest-black-square')
+            .removeClass('dest-both-square')
+            .removeAttr('title');
     }
 
     // moveProbs.threatened / moveProbs.protected both have the same
@@ -132,6 +154,87 @@
     }
     const threatenedSquaresFor = (sides) => squaresFor(moveProbs.threatened, sides);
     const protectedSquaresFor = (sides) => squaresFor(moveProbs.protected, sides);
+
+    // Which calc mode rendered this page. "optimal" gets the flat
+    // reach-coloring scheme below instead of the probability-weighted
+    // heatmap above - the two are different enough (binary reachability
+    // vs. weighted likelihood) that branching once here, into two
+    // separate render paths, is clearer than threading calc-mode checks
+    // through a single shared function.
+    const calcMode = "{{ calc }}";
+
+    // Every destination square reachable by this side's pieces,
+    // regardless of origin. moveProbs[side] already only contains safe
+    // destinations for optimal mode (unsafe ones are filtered out
+    // server-side), so no separate "without threat of capture" check is
+    // needed here - being present in moveProbs already means that.
+    function destSquaresFor(side) {
+        const squares = new Set();
+        const byOrigin = moveProbs[side] || {};
+        for (const origin in byOrigin) {
+            for (const dest in byOrigin[origin]) {
+                squares.add(dest);
+            }
+        }
+        return squares;
+    }
+
+    // sides: array containing 'white', 'black', or both. Flat light
+    // blue for squares only white can safely reach, light red for
+    // squares only black can, a split fill for squares both can.
+    function showOptimalAggregate(sides) {
+        clearHighlights();
+        const whiteDests = sides.includes('white') ? destSquaresFor('white') : new Set();
+        const blackDests = sides.includes('black') ? destSquaresFor('black') : new Set();
+        const allDests = new Set([...whiteDests, ...blackDests]);
+        allDests.forEach(function(sq) {
+            const elem = $('*[data-square="' + sq + '"]');
+            const reachableByWhite = whiteDests.has(sq);
+            const reachableByBlack = blackDests.has(sq);
+            if (reachableByWhite && reachableByBlack) {
+                elem.addClass('dest-both-square');
+            } else if (reachableByWhite) {
+                elem.addClass('dest-white-square');
+            } else {
+                elem.addClass('dest-black-square');
+            }
+        });
+    }
+
+    // Narrows the optimal view to just one piece's own (already-safe)
+    // destinations.
+    function showOptimalPieceView(side, square) {
+        clearHighlights();
+        const dests = moveProbs[side][square];
+        if (!dests) {
+            return;
+        }
+        const destClass = side === 'white' ? 'dest-white-square' : 'dest-black-square';
+        for (const dest in dests) {
+            const info = dests[dest];
+            const elem = $('*[data-square="' + dest + '"]');
+            elem.addClass(destClass);
+            elem.attr('title', `${side} ${square}\u2192${dest}: ${(info.probability * 100).toFixed(1)}%${info.capture ? ' (capture)' : ''}`);
+        }
+        $('*[data-square="' + square + '"]').css('background', 'lightgreen');
+    }
+
+    // Dispatchers so the click/button handlers below don't each need
+    // their own calcMode branch.
+    function renderAggregate(sides) {
+        if (calcMode === 'optimal') {
+            showOptimalAggregate(sides);
+        } else {
+            showAggregateHeatmap(sides);
+        }
+    }
+    function renderPiece(side, square) {
+        if (calcMode === 'optimal') {
+            showOptimalPieceView(side, square);
+        } else {
+            showProbabilitiesFor(side, square);
+        }
+    }
 
     // moveProbs.threatened and moveProbs.protected are independent sets -
     // a square can genuinely be both at once when different pieces (or
@@ -233,7 +336,9 @@
 
     $(document).ready(function() {
         moveProbs = {{ move_probs|safe }};
-        buildAggregate();
+        if (calcMode !== 'optimal') {
+            buildAggregate();
+        }
 
         const config = {
             pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png',
@@ -247,21 +352,21 @@
             $('#myBoard').css('width', vpw + 'px');
         }
 
-        showAggregateHeatmap(['white', 'black']);
+        renderAggregate(['white', 'black']);
 
         $("#myBoard").on('click', '[data-square]', function() {
             const square = $(this).data('square');
             const side = originSide(square);
             if (side) {
-                showProbabilitiesFor(side, square);
+                renderPiece(side, square);
             } else {
                 clearHighlights();
             }
         });
 
-        $('#show_both').on('click', function() { showAggregateHeatmap(['white', 'black']); });
-        $('#show_white').on('click', function() { showAggregateHeatmap(['white']); });
-        $('#show_black').on('click', function() { showAggregateHeatmap(['black']); });
+        $('#show_both').on('click', function() { renderAggregate(['white', 'black']); });
+        $('#show_white').on('click', function() { renderAggregate(['white']); });
+        $('#show_black').on('click', function() { renderAggregate(['black']); });
 
         // Changing calculation mode needs a fresh probability set from
         // the server (it's not something we can just re-blend
@@ -307,15 +412,14 @@
 
     <p></p>
     <div id="legend" class="text-muted small">
+        {% if calc == "optimal" %}
+        <span style="background: #cfe2ff;"></span> White reach
+        &nbsp;&nbsp;
+        <span style="background: #f8d7da;"></span> Black reach
+        {% else %}
         <span style="background: rgb(13,110,253);"></span> White
         &nbsp;&nbsp;
         <span style="background: rgb(220,53,69);"></span> Black
-        {% if calc == "optimal" %}
-        &nbsp;&nbsp;
-        <span style="background: transparent; outline: 3px solid yellow; outline-offset: -3px;"></span> Threatened
-        &nbsp;&nbsp;
-        <span style="background: transparent; outline: 3px solid green; outline-offset: -3px;"></span> Protected
-        {% else %}
         &nbsp;&nbsp;
         <span style="background: rgb(205, 13, 253);"></span> Contested
         &nbsp;&nbsp;
