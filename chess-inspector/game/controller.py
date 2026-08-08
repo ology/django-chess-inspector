@@ -333,6 +333,30 @@ class Controller:
                     for move in moves
                 }
 
+            if calc == "optimal":
+                # The moves loop above only ever flags a destination
+                # square as protected - it never looks at the mover's
+                # OWN square, because a piece's current square can't
+                # also be one of its own legal destinations (and no
+                # other same-color piece can move there either, since
+                # that would be capturing your own piece). So a piece
+                # sitting still and being defended by a teammate never
+                # shows up, even though it's exactly the kind of
+                # "protected" the frontend wants to outline. This pass
+                # checks every one of this color's occupied squares
+                # directly against Coverage's is_protected_by list,
+                # regardless of whether that square is a piece, an
+                # origin, or a destination anywhere above.
+                for square in chess.SQUARES:
+                    piece = board.piece_at(square)
+                    if not piece or piece.color != color:
+                        continue
+                    square_name = chess.square_name(square)
+                    if self._piece_is_protected(cover, square_name):
+                        protected[color_key].setdefault(square_name, [])
+                        if square_name not in protected[color_key][square_name]:
+                            protected[color_key][square_name].append(square_name)
+
         result["threatened"] = threatened
         result["protected"] = protected
         return json.dumps(result, sort_keys=True)
@@ -407,3 +431,21 @@ class Controller:
         else:
             defenders = dest_cover.get(f"{mover}_can_capture_here", [])
         return any(sq != origin for sq in defenders)
+
+    def _piece_is_protected(self, cover, square_name):
+        """
+        True if a piece already sitting on this square is defended by at
+        least one other same-color piece, per Coverage's is_protected_by
+        list for that square. Coverage builds is_protected_by from the
+        color that occupies the square - i.e. friendly defenders - the
+        mirror image of is_threatened_by, which _dest_is_threatened and
+        _dest_is_protected read from the opposite side (see
+        _dest_is_protected's docstring for that orientation).
+
+        Unlike _dest_is_protected, there's no move here and so no origin
+        square to exclude: a defending piece can't be the same piece
+        occupying the square it's defending, so is_protected_by never
+        needs that self-reference filtered out.
+        """
+        defenders = cover.get(square_name, {}).get("is_protected_by", [])
+        return len(defenders) > 0
