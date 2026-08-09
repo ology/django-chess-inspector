@@ -73,6 +73,22 @@
         outline: 3px solid green;
         outline-offset: -3px;
     }
+    .threatened-outline {
+        outline: 3px solid yellow;
+        outline-offset: -3px;
+    }
+    /* outline is a single CSS property, so a plain .threatened-outline
+       plus .protected-outline combo can't show two different outline
+       colors at once - whichever rule comes later in the cascade would
+       just win outright and hide the other. This combined selector
+       keeps yellow at the edge and moves green to an inset box-shadow
+       ring instead, so a square that's both risky and defended shows
+       both: yellow outer, green nested inside it. */
+    .threatened-outline.protected-outline {
+        outline: 3px solid yellow;
+        outline-offset: -3px;
+        box-shadow: inset 0 0 0 8px green;
+    }
     #legend span {
         display: inline-block;
         width: 14px;
@@ -138,6 +154,7 @@
             .removeClass('dest-black-square')
             .removeClass('dest-both-square')
             .removeClass('protected-outline')
+            .removeClass('threatened-outline')
             .removeAttr('title');
     }
 
@@ -184,39 +201,31 @@
         return squares;
     }
 
-    // Squares holding a piece of this color that's defended by ANOTHER
-    // piece of that same color. moveProbs.protected[side] normally maps
-    // a piece's own square to the destinations it could safely move to
-    // while still covered - but the backend also adds a square as its
-    // own entry (protected[side][sq] includes sq itself) when the piece
-    // already sitting there is separately backed up by an ally, whether
-    // or not that square is anyone's move destination at all. That
-    // self-reference is exactly what this looks for.
-    function selfProtectedSquaresFor(side) {
-        const squares = new Set();
-        const byOrigin = (moveProbs.protected && moveProbs.protected[side]) || {};
-        for (const origin in byOrigin) {
-            if (byOrigin[origin].includes(origin)) {
-                squares.add(origin);
-            }
-        }
-        return squares;
-    }
-
     function applyProtectedOutline(squares) {
         squares.forEach(function(sq) {
             $('*[data-square="' + sq + '"]').addClass('protected-outline');
         });
     }
 
+    function applyThreatenedOutline(squares) {
+        squares.forEach(function(sq) {
+            $('*[data-square="' + sq + '"]').addClass('threatened-outline');
+        });
+    }
+
     // sides: array containing 'white', 'black', or both. Flat light
     // blue for squares only white can safely reach, light red for
-    // squares only black can, a split fill for squares both can. Any
-    // square holding a piece of a color in view, backed up by another
-    // piece of that SAME color, also gets a green outline - computed
-    // per color and only unioned afterward, so a black piece's own
-    // defense can never leak an outline onto a white-colored square (or
-    // vice versa).
+    // squares only black can, a split fill for squares both can.
+    //
+    // protectedSquaresFor(sides) and threatenedSquaresFor(sides) each
+    // already cover TWO cases in one: moveProbs.protected[color] and
+    // moveProbs.threatened[color] both mix together (a) a piece of that
+    // color already sitting on a square, defended/attacked right where
+    // it stands, and (b) a destination square that color could move a
+    // piece to, which would be defended/attacked once it landed there.
+    // Both kinds show as a value in the same {origin: [dest,...]}
+    // structure, so no special-casing is needed to combine them - just
+    // reading the flattened set per color already gets both.
     function showOptimalAggregate(sides) {
         clearHighlights();
         const whiteDests = sides.includes('white') ? destSquaresFor('white') : new Set();
@@ -234,19 +243,17 @@
                 elem.addClass('dest-black-square');
             }
         });
-        const protectedPieces = new Set();
-        if (sides.includes('white')) {
-            selfProtectedSquaresFor('white').forEach(sq => protectedPieces.add(sq));
-        }
-        if (sides.includes('black')) {
-            selfProtectedSquaresFor('black').forEach(sq => protectedPieces.add(sq));
-        }
-        applyProtectedOutline(protectedPieces);
+        applyProtectedOutline(protectedSquaresFor(sides));
+        applyThreatenedOutline(threatenedSquaresFor(sides));
     }
 
     // Narrows the optimal view to just one piece's own (already-safe)
-    // destinations. If the clicked piece itself is defended by another
-    // piece of its own color, its own square gets the green outline too.
+    // destinations. moveProbs.protected[side][square] and
+    // moveProbs.threatened[side][square] - read directly, same as the
+    // non-optimal showProbabilitiesFor above - already give exactly
+    // this piece's own outline squares: its own square if it's
+    // defended/attacked while just sitting there, plus any of its own
+    // destinations that are defended/risky once it moves there.
     function showOptimalPieceView(side, square) {
         clearHighlights();
         const dests = moveProbs[side][square];
@@ -262,9 +269,13 @@
         }
         $('*[data-square="' + square + '"]').css('background', 'lightgreen');
 
-        if (selfProtectedSquaresFor(side).has(square)) {
-            applyProtectedOutline(new Set([square]));
-        }
+        const protectedMoves = moveProbs.protected || {};
+        const protectedForPiece = (protectedMoves[side] && protectedMoves[side][square]) || [];
+        applyProtectedOutline(new Set(protectedForPiece));
+
+        const threatenedMoves = moveProbs.threatened || {};
+        const threatenedForPiece = (threatenedMoves[side] && threatenedMoves[side][square]) || [];
+        applyThreatenedOutline(new Set(threatenedForPiece));
     }
 
     // Dispatchers so the click/button handlers below don't each need
@@ -466,6 +477,8 @@
         <span style="background: #f8d7da;"></span> Black reach
         &nbsp;&nbsp;
         <span style="background: transparent; outline: 3px solid green; outline-offset: -3px;"></span> Protected
+        &nbsp;&nbsp;
+        <span style="background: transparent; outline: 3px solid yellow; outline-offset: -3px;"></span> Threatened
         {% else %}
         <span style="background: rgb(13,110,253);"></span> White
         &nbsp;&nbsp;
