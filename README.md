@@ -17,7 +17,7 @@ Possible moves (for black):
 
 ## Install and run:
 
-```
+```shell
 git clone https://github.com/ology/django-chess-inspector.git
 cd django-chess-inspector
 
@@ -31,10 +31,12 @@ python manage.py collectstatic
 cd chess-inspector/
 cp inspector/inspector/settings-example.py inspector/inspector/settings.py
 vim chess-inspector/inspector/settings.py # set the ALLOWED_HOSTS & CSRF_TRUSTED_ORIGINS, etc.
-python3 manage.py runserver 192.168.99.50:8080
+python3 manage.py runserver
 ```
-~
-```
+
+Or:
+
+```shell
 pip install gunicorn
 GUNICORN_CMD_ARGS="--bind=192.168.99.50:8080 --workers=3 --timeout 120" gunicorn inspector.wsgi:application
 ```
