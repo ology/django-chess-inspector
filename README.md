@@ -38,7 +38,7 @@ Or:
 
 ```shell
 pip install gunicorn
-GUNICORN_CMD_ARGS="--bind=192.168.99.50:8080 --workers=3 --timeout 120" gunicorn inspector.wsgi:application
+GUNICORN_CMD_ARGS="--bind=127.0.0.1:8082 --workers=3 --timeout 120" gunicorn inspector.wsgi:application
 ```
 
 ## Description
